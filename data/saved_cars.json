@@ -1,0 +1,47 @@
+{
+  "_comment": "Gemte biler du selv har slaaet op og bedt om at faa tilfoejet. Vises altid i tabellen (normaliseres og scores i browseren) sammen med det, du evt. importerer. Tilfoej flere ved at sende annoncerne. Raa felter - udfyldes/scores automatisk. Diesel vises kun naar 'Medtag diesel' er slaaet til.",
+  "cars": [
+    {
+      "id": "6889421",
+      "make": "Kia", "model": "Sportage", "variant": "1,6 CRDi 136 Advance DCT 5d",
+      "fuel": "Diesel", "gearbox_name": "Automatisk gear",
+      "model_year": 2019, "first_registration": "2/2019", "mileage_km": 114000,
+      "wltp_consumption": 22.9, "price": 159900, "hp": 136, "torque_nm": 320,
+      "dealer": "Auto Arena", "dealer_address": "Silkeborg, Østjylland", "city": "Silkeborg",
+      "url": "https://www.bilbasen.dk/brugt/bil/kia/sportage/16-crdi-136-advance-dct-5d/6889421",
+      "image": "https://billeder.bilbasen.dk/bilinfo/1a1d111b-9d46-4e62-bccb-0610a76c7cb0.jpeg?class=S960X960",
+      "description": "Aftageligt anhaengertraek (1.600 kg), LED koerelys, fjernlysassistent, adaptiv fartpilot, Apple CarPlay, Android Auto, navigation med skiltegenkendelse, saedevarme for og bag, vognbaneassistent, bakkamera, parkeringssensor bag, 2 zone klimaanlaeg, multifunktionslaederrat med ratvarme, 19 tommer alufaelge, DAB radio, elektrisk parkeringsbremse."
+    },
+    {
+      "id": "6579331",
+      "make": "Kia", "model": "Sportage", "variant": "1,6 CRDi mHEV Vision DCT 5d",
+      "fuel": "Diesel", "gearbox_name": "Automatisk gear",
+      "model_year": 2019, "first_registration": "8/2019", "mileage_km": 123000,
+      "wltp_consumption": 17.9, "price": 159900, "hp": 136, "torque_nm": 320,
+      "dealer": "Auto-House Hvidovre", "dealer_address": "Naestved, Syd- og Vestsjaelland", "city": "Naestved",
+      "url": "https://www.bilbasen.dk/brugt/bil/kia/sportage/16-crdi-mhev-vision-dct-5d/6579331",
+      "image": "https://billeder.bilbasen.dk/bilinfo/43ea77be-befc-4d4c-ac14-b1edcca37c19.jpeg?class=S960X960",
+      "description": "Aftageligt traek (1.600 kg), automatgear, Apple CarPlay, navigation, bluetooth, bakkamera, skiltegenkendelse, saedevarme, 2 zone klima, adaptiv fartpilot, vognbaneassistent, tonede ruder."
+    },
+    {
+      "id": "kia-viborg-collection",
+      "make": "Kia", "model": "Sportage", "variant": "1,6 CRDi mHEV Collection 1+2 DCT 5d",
+      "fuel": "Diesel", "gearbox_name": "Automatgear",
+      "model_year": 2019, "mileage_km": 75000, "wltp_consumption": 25.0,
+      "price": 164900, "hp": 136, "torque_nm": 320, "kerb_weight_kg": 1464, "periodic_tax": 1690,
+      "dealer": "Kia Viborg - UJS Biler", "dealer_address": "Viborg, Vestjylland", "city": "Viborg",
+      "url": "https://kiaonline.dk/brugte-biler/kia-sportage-crdi-mhev-collection-12-dct/c32fead0-1d5b-465c-8e3f-a5a7254afd18/",
+      "description": "Anhaengertraek, saedevarme for og bag, navigation, Apple CarPlay, Android Auto, bakkamera, adaptiv fartpilot, vognbaneassistent, parkeringssensor bag, LED koerelys, 2 zone klimaanlaeg, varme i rat, fjernlysassistent, isofix, 19 tommer alufaelge."
+    },
+    {
+      "id": "kia-koge-intro",
+      "make": "Kia", "model": "Sportage", "variant": "1,6 CRDi 136 Intro Edition DCT 5d",
+      "fuel": "Diesel", "gearbox_name": "Automatgear",
+      "model_year": 2019, "mileage_km": 127000, "price": 149900, "hp": 136, "torque_nm": 320,
+      "kerb_weight_kg": 1464, "periodic_tax": 1800,
+      "dealer": "Kia Koege - Max Due A/S", "dealer_address": "Koege, Syd- og Vestsjaelland", "city": "Koege",
+      "url": "https://kiaonline.dk/brugte-biler/kia-sportage-crdi-136-intro-edition-dct/da59903d-ea4e-c1c2-07eb-08dedcf14efe/",
+      "description": "Anhaengertraek, saedevarme, navigation, splitbagsaede, 2 zone klimaanlaeg, fartpilot, skiltegenkendelse, isofix, DAB radio, tonede ruder, alufaelge."
+    }
+  ]
+}

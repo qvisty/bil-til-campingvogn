@@ -229,6 +229,7 @@ gearkasseklassifikation, vægtforhold og scoreberegning.
 | `trailer_stability_knowledge.json` | Viden og søgetermer om anhængerstabilisering. |
 | `model_specs.json` | Modelviden: typiske egenvægte, trækvægte, moment m.m. pr. model+motor. Udfylder felter, der mangler i Bilbasens liste. |
 | `city_coords.json` | Bykoordinater til kortet (genereres af `geocode.py`). |
+| `saved_cars.json` | Konkrete biler du har slået op og bedt om at få gemt. Vises altid (markeret "gemt"), scores i browseren. Diesel vises kun med "Medtag diesel". |
 | `settings.json` | Profil, scoringsvægte, tærskler, driftsøkonomi og finansieringssatser. |
 
 ### Modelviden — udfyld manglende egenvægt/trækvægt

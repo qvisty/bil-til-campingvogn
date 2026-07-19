@@ -88,10 +88,14 @@ const CONSOLE_SNIPPET = `(() => {
     if (confirm('Der ligger indsamlet data, men den er over 2 minutter gammel.\\n\\nOK = NULSTIL og start forfra\\nAnnuller = FORTSÆT (tilføj til det eksisterende)')) s=null;
   }
   if (!s) s={ ts:now, pages:0, html:[] };
-  const cards=[...document.querySelectorAll('article[class*="Listing_listing__"]')].map(a=>a.outerHTML);
+  const trim = a => { const c=a.cloneNode(true);
+    c.querySelectorAll('[class*="Listing_media__"], svg, button, script, style, source, noscript, picture').forEach(n=>n.remove());
+    return c.outerHTML.replace(/\\s+/g,' '); };
+  const cards=[...document.querySelectorAll('article[class*="Listing_listing__"]')].map(trim);
   if (!cards.length) { alert('Fandt ingen annoncekort på denne side. Er du på et søgeresultat?'); return; }
   s.html.push(...cards); s.pages++; s.ts=now;
-  sessionStorage.setItem(KEY, JSON.stringify(s));
+  try { sessionStorage.setItem(KEY, JSON.stringify(s)); }
+  catch(e){ alert('Kunne ikke gemme mere ('+s.html.length+' annoncer indsamlet). Vælg OK i næste boks for at kopiere det, du har indtil nu.'); }
   const next=document.querySelector('a[data-e2e="pagination-next"]') || document.querySelector('a[rel="next"], a[aria-label*="æste"]');
   const hasNext=!!(next && next.getAttribute('href') && !next.hasAttribute('disabled') && !/disabled/i.test(next.className||''));
   const cur=(document.querySelector('[data-e2e="pagination-current"]')||{}).textContent;
@@ -100,7 +104,7 @@ const CONSOLE_SNIPPET = `(() => {
   const finish=confirm('Gemt'+sideInfo+' (+'+cards.length+' biler). I alt '+s.html.length+' annoncer indsamlet.\\n\\nOK = KOPIÉR ALT til udklipsholder (jeg er færdig)\\nAnnuller = '+(hasNext?'gå til NÆSTE side (indsæt og kør koden igen der)':'DETTE ER SIDSTE SIDE – vælg OK for at kopiere alt'));
   if (finish) {
     const out='<section class="srp_results">'+s.html.join('')+'</section>';
-    const done=()=>{ sessionStorage.removeItem(KEY); console.log('✓ Kopieret '+s.html.length+' annoncer til udklipsholderen. Indsæt i kopier_section.txt eller i \\'Indsæt tekst\\'.'); };
+    const done=()=>{ sessionStorage.removeItem(KEY); console.log('✓ Kopieret '+s.html.length+' annoncer til udklipsholderen. Indsæt i bilerne.txt eller i \\'Indsæt tekst\\'.'); };
     if (typeof copy==='function') { copy(out); done(); }
     else navigator.clipboard.writeText(out).then(done, ()=>alert('Kunne ikke kopiere automatisk. Data ligger i sessionStorage[\\'bb_collect\\'].'));
   } else if (hasNext) { next.click(); console.log('→ Gik til næste side. Indsæt og kør koden igen.'); }
@@ -204,7 +208,7 @@ async function fetchJSON(path, fallback) {
 /** Indlaes alle datafiler og brugerdata. */
 async function loadAll() {
   State.user = Store.load();
-  const [cars, status, settings, priceHistory, gbKnow, trKnow, cityCoords, modelSpecs] = await Promise.all([
+  const [cars, status, settings, priceHistory, gbKnow, trKnow, cityCoords, modelSpecs, savedCars] = await Promise.all([
     fetchJSON('data/cars.json', []),
     fetchJSON('data/scrape_status.json', {}),
     fetchJSON('data/settings.json', {}),
@@ -212,7 +216,8 @@ async function loadAll() {
     fetchJSON('data/gearbox_knowledge.json', {}),
     fetchJSON('data/trailer_stability_knowledge.json', {}),
     fetchJSON('data/city_coords.json', {}),
-    fetchJSON('data/model_specs.json', {})
+    fetchJSON('data/model_specs.json', {}),
+    fetchJSON('data/saved_cars.json', {})
   ]);
   // "Fjern alle biler" skjuler de medfoelgende data/cars.json (kun browser-importerede
   // og favoritter vises derefter). Kan vises igen via banneret i oversigten.
@@ -224,6 +229,7 @@ async function loadAll() {
   State.trailerKnowledge = trKnow || {};
   State.cityCoords = cityCoords || {};
   State.modelSpecs = modelSpecs || {};
+  State.savedCars = (savedCars && Array.isArray(savedCars.cars)) ? savedCars.cars : (Array.isArray(savedCars) ? savedCars : []);
   // Flet brugerens gemte indstillinger over profilen.
   if (State.user.settings && Object.keys(State.user.settings).length && State.settings.profile) {
     State.settings.profile = Object.assign({}, State.settings.profile, State.user.settings);
@@ -314,7 +320,10 @@ function injectFavoriteSnapshots() {
 /** Normaliser + scor browser-importerede biler og flet dem ind i State.cars.
  *  Bruger den delte Pipeline (parse-score.js) og de samme videns-filer som Python. */
 function processImportedIntoCars() {
-  const raw = Object.values(State.user.importedRaw || {});
+  // Gemte biler (data/saved_cars.json) vises altid, medmindre "Fjern alle biler".
+  const saved = State.user.hideBaseCars ? [] : (State.savedCars || []).map(c => Object.assign({ _saved: true }, c));
+  const imported = Object.values(State.user.importedRaw || {});
+  const raw = saved.concat(imported);
   if (!raw.length || typeof Pipeline === 'undefined') return;
   const existingActive = State.cars.filter(c => c.status === 'active' && !c.rejected);
   const scored = Pipeline.processRaw(raw, State.settings, State.gearboxKnowledge,
@@ -920,7 +929,7 @@ function renderTable(list) {
     return `<tr>
       <td>${starHTML(c.id)}</td>
       <td>${scoreBadge(c.score)}</td>
-      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${carFuelFlag(c)}${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
+      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${carFuelFlag(c)}${c._saved ? ' <span class="chip info small">gemt</span>' : ''}${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
       <td>${fmtPrice(c.price)}</td>
       <td>${fmtNum(c.mileage_km, ' km')}</td>
       <td>${c.wltp_consumption ? c.wltp_consumption.toLocaleString('da-DK') + ' km/l' : '–'}</td>
