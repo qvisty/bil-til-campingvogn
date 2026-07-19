@@ -648,7 +648,8 @@ const Overview = {
   makeFilter: '',
   fuelFilter: '',
   gearboxFilter: '',
-  yearFrom: ''
+  yearFrom: '',
+  maxMonthly: ''
 };
 
 /** Saet oversigtens kontroller op og render foerste gang. */
@@ -663,6 +664,8 @@ function setupOverview() {
   document.getElementById('filter-fuel')?.addEventListener('change', e => { Overview.fuelFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-gearbox')?.addEventListener('change', e => { Overview.gearboxFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-year')?.addEventListener('change', e => { Overview.yearFrom = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
+  document.getElementById('filter-monthly')?.addEventListener('input', e => { Overview.maxMonthly = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
+  document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
   document.getElementById('filter-favorites')?.addEventListener('change', e => { Overview.onlyFavorites = e.target.checked; renderOverview(); });
   document.getElementById('filter-dismissed')?.addEventListener('change', e => { Overview.hideDismissed = e.target.checked; renderOverview(); });
   document.getElementById('sort-select')?.addEventListener('change', e => {
@@ -729,6 +732,16 @@ function setSort(key, { toggle = false } = {}) {
   renderOverview();
 }
 
+/** Nulstil alle filtre og felter i oversigten. */
+function clearFilters() {
+  Object.assign(Overview, { search: '', makeFilter: '', fuelFilter: '', gearboxFilter: '', yearFrom: '', maxMonthly: '', onlyFavorites: false });
+  ['search', 'filter-make', 'filter-fuel', 'filter-gearbox', 'filter-year', 'filter-monthly'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const fav = document.getElementById('filter-favorites'); if (fav) fav.checked = false;
+  renderOverview();
+}
+
 /** Skift mellem tabel- og kortvisning. */
 function setView(v) {
   Overview.view = v;
@@ -744,6 +757,7 @@ function currentList() {
   if (Overview.hideDismissed) list = list.filter(c => !isDismissed(c.id));
   if (Overview.makeFilter) list = list.filter(c => c.make === Overview.makeFilter);
   if (Overview.yearFrom) list = list.filter(c => c.model_year && c.model_year >= Overview.yearFrom);
+  if (Overview.maxMonthly) list = list.filter(c => { const m = monthlyPayment(c); return m !== null && m <= Overview.maxMonthly; });
   if (Overview.fuelFilter) list = list.filter(c => c.fuel_label === Overview.fuelFilter);
   if (Overview.gearboxFilter) list = list.filter(c => c.gearbox_type_normalized === Overview.gearboxFilter);
   if (Overview.search) {
