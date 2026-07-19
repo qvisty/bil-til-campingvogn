@@ -683,14 +683,11 @@ const Overview = {
   onlyFavorites: false,
   hideDismissed: true,
   excludedMakes: new Set(),
-  fuelFilter: '',
+  excludedFuels: new Set(),
   excludedGearboxes: new Set(),
   yearFrom: '',
   maxMonthly: '',
-  minScore: '',
-  includeDiesel: false,
-  includePHEV: false,
-  includeEV: false
+  minScore: ''
 };
 
 /** Saet oversigtens kontroller op og render foerste gang. */
@@ -701,16 +698,12 @@ function setupOverview() {
   document.getElementById('view-table')?.addEventListener('click', () => setView('table'));
   document.getElementById('view-cards')?.addEventListener('click', () => setView('cards'));
 
-  document.getElementById('filter-fuel')?.addEventListener('change', e => { Overview.fuelFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-year')?.addEventListener('change', e => { Overview.yearFrom = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('filter-monthly')?.addEventListener('input', e => { Overview.maxMonthly = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('filter-score')?.addEventListener('input', e => { Overview.minScore = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
   document.getElementById('filter-favorites')?.addEventListener('change', e => { Overview.onlyFavorites = e.target.checked; renderOverview(); });
   document.getElementById('filter-dismissed')?.addEventListener('change', e => { Overview.hideDismissed = e.target.checked; renderOverview(); });
-  document.getElementById('include-diesel')?.addEventListener('change', e => { Overview.includeDiesel = e.target.checked; renderOverview(); });
-  document.getElementById('include-phev')?.addEventListener('change', e => { Overview.includePHEV = e.target.checked; renderOverview(); });
-  document.getElementById('include-ev')?.addEventListener('change', e => { Overview.includeEV = e.target.checked; renderOverview(); });
   document.getElementById('sort-select')?.addEventListener('change', e => {
     setSort(e.target.value);
   });
@@ -758,9 +751,26 @@ function populateFilterOptions() {
     updateMakeSummary(makes);
   }
 
-  const fuels = [...new Set(activeCars().map(c => c.fuel_label).filter(Boolean))];
-  const fuelSel = document.getElementById('filter-fuel');
-  if (fuelSel) fuels.forEach(f => fuelSel.insertAdjacentHTML('beforeend', `<option value="${esc(f)}">${esc(f)}</option>`));
+  const fuels = [...new Set(activeCars().map(c => c.fuel_label).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
+  const fuelBox = document.getElementById('fuel-checkboxes');
+  if (fuelBox) {
+    fuelBox.innerHTML = fuels.map(f =>
+      `<label><input type="checkbox" class="fuel-cb" value="${esc(f)}" ${Overview.excludedFuels.has(f) ? '' : 'checked'}> ${esc(f)}</label>`).join('');
+    fuelBox.querySelectorAll('.fuel-cb').forEach(cb => cb.addEventListener('change', () => {
+      if (cb.checked) Overview.excludedFuels.delete(cb.value); else Overview.excludedFuels.add(cb.value);
+      updateFuelSummary(fuels); renderOverview();
+    }));
+    document.getElementById('fuel-all')?.addEventListener('click', () => {
+      Overview.excludedFuels.clear();
+      fuelBox.querySelectorAll('.fuel-cb').forEach(cb => cb.checked = true);
+      updateFuelSummary(fuels); renderOverview();
+    });
+    document.getElementById('fuel-none')?.addEventListener('click', () => {
+      fuelBox.querySelectorAll('.fuel-cb').forEach(cb => { cb.checked = false; Overview.excludedFuels.add(cb.value); });
+      updateFuelSummary(fuels); renderOverview();
+    });
+    updateFuelSummary(fuels);
+  }
 
   const gLabels = { torque_converter: 'Momentomformer', ecvt_hybrid: 'e-CVT/hybrid', wet_dct: 'Vaadkoblet DCT', dry_dct: 'Toerkoblet DCT', cvt: 'CVT', amt: 'Automatiseret manuel', unknown: 'Ukendt' };
   const gears = [...new Set(activeCars().map(c => c.gearbox_type_normalized).filter(Boolean))]
@@ -812,17 +822,16 @@ function setSort(key, { toggle = false } = {}) {
 
 /** Nulstil alle filtre og felter i oversigten. */
 function clearFilters() {
-  Object.assign(Overview, { search: '', fuelFilter: '', yearFrom: '', maxMonthly: '', minScore: '', onlyFavorites: false, includeDiesel: false, includePHEV: false, includeEV: false });
+  Object.assign(Overview, { search: '', yearFrom: '', maxMonthly: '', minScore: '', onlyFavorites: false });
   Overview.excludedMakes.clear();
+  Overview.excludedFuels.clear();
   Overview.excludedGearboxes.clear();
-  ['search', 'filter-fuel', 'filter-year', 'filter-monthly', 'filter-score'].forEach(id => {
+  ['search', 'filter-year', 'filter-monthly', 'filter-score'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  ['include-diesel', 'include-phev', 'include-ev'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
-  document.querySelectorAll('.make-cb').forEach(cb => cb.checked = true);
-  document.querySelectorAll('.gearbox-cb').forEach(cb => cb.checked = true);
-  const makes = [...new Set(activeCars().map(c => c.make).filter(Boolean))];
-  updateMakeSummary(makes);
+  document.querySelectorAll('.make-cb, .fuel-cb, .gearbox-cb').forEach(cb => cb.checked = true);
+  updateMakeSummary([...new Set(activeCars().map(c => c.make).filter(Boolean))]);
+  updateFuelSummary([...new Set(activeCars().map(c => c.fuel_label).filter(Boolean))]);
   updateGearboxSummary([...new Set(activeCars().map(c => c.gearbox_type_normalized).filter(Boolean))]);
   const fav = document.getElementById('filter-favorites'); if (fav) fav.checked = false;
   renderOverview();
@@ -836,6 +845,16 @@ function updateMakeSummary(allMakes) {
   const shown = total - Overview.excludedMakes.size;
   el.textContent = Overview.excludedMakes.size === 0 ? 'Alle mærker'
     : shown === 0 ? 'Ingen mærker valgt' : `${shown} af ${total} mærker`;
+}
+
+/** Opdater teksten på drivmiddel-multiselectens knap. */
+function updateFuelSummary(allFuels) {
+  const el = document.getElementById('fuel-summary');
+  if (!el) return;
+  const total = (allFuels || []).length;
+  const shown = total - Overview.excludedFuels.size;
+  el.textContent = Overview.excludedFuels.size === 0 ? 'Alle drivmidler'
+    : shown === 0 ? 'Ingen drivmidler valgt' : `${shown} af ${total} drivmidler`;
 }
 
 /** Opdater teksten på gearkasse-multiselectens knap. */
@@ -861,15 +880,11 @@ function currentList() {
   let list = activeCars();
   if (Overview.onlyFavorites) list = list.filter(c => isFavorite(c.id));
   if (Overview.hideDismissed) list = list.filter(c => !isDismissed(c.id));
-  // Drivmiddel-fravalg (blodt): skjul diesel/plug-in/el medmindre medtaget.
-  if (!Overview.includeDiesel) list = list.filter(c => c.fuel !== 'diesel');
-  if (!Overview.includePHEV) list = list.filter(c => c.hybrid_type !== 'PHEV');
-  if (!Overview.includeEV) list = list.filter(c => c.fuel !== 'el');
   if (Overview.excludedMakes.size) list = list.filter(c => !Overview.excludedMakes.has(c.make));
+  if (Overview.excludedFuels.size) list = list.filter(c => !Overview.excludedFuels.has(c.fuel_label));
   if (Overview.yearFrom) list = list.filter(c => c.model_year && c.model_year >= Overview.yearFrom);
   if (Overview.minScore) list = list.filter(c => c.score >= Overview.minScore);
   if (Overview.maxMonthly) list = list.filter(c => { const m = monthlyPayment(c); return m !== null && m <= Overview.maxMonthly; });
-  if (Overview.fuelFilter) list = list.filter(c => c.fuel_label === Overview.fuelFilter);
   if (Overview.excludedGearboxes.size) list = list.filter(c => !Overview.excludedGearboxes.has(c.gearbox_type_normalized));
   if (Overview.search) {
     const q = Overview.search;
@@ -880,6 +895,7 @@ function currentList() {
     switch (key) {
       case 'score': return c.score;
       case 'name': return carName(c).toLowerCase();
+      case 'fuel': return (c.fuel_label || 'zzz').toLowerCase();
       case 'price': return c.price || Infinity;
       case 'mileage_km': return c.mileage_km || Infinity;
       case 'model_year': return c.model_year || 0;
@@ -929,7 +945,8 @@ function renderTable(list) {
     return `<tr>
       <td>${starHTML(c.id)}</td>
       <td>${scoreBadge(c.score)}</td>
-      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${carFuelFlag(c)}${c._saved ? ' <span class="chip info small">gemt</span>' : ''}${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
+      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${c._saved ? ' <span class="chip info small">gemt</span>' : ''}${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
+      <td class="small">${esc(c.fuel_label || '–')}</td>
       <td>${fmtPrice(c.price)}</td>
       <td>${fmtNum(c.mileage_km, ' km')}</td>
       <td>${c.wltp_consumption ? c.wltp_consumption.toLocaleString('da-DK') + ' km/l' : '–'}</td>
@@ -948,6 +965,7 @@ function renderTable(list) {
     { label: '', key: null },
     { label: 'Score', key: 'score' },
     { label: 'Bil', key: 'name' },
+    { label: 'Drivmiddel', key: 'fuel' },
     { label: 'Pris', key: 'price' },
     { label: 'Km', key: 'mileage_km' },
     { label: 'km/l', key: 'consumption' },
@@ -1001,14 +1019,6 @@ function renderCards(list) {
 /** Bilens lokation (by) til visning. */
 function carLocation(c) {
   return c.city || c.dealer_address || c.dealer || '';
-}
-
-/** Markering for drivmidler der ellers er fravalgt (diesel/plug-in/el). */
-function carFuelFlag(c) {
-  if (c.fuel === 'diesel') return '<span class="chip yellow small" title="Diesel er ellers fravalgt">Diesel</span>';
-  if (c.hybrid_type === 'PHEV') return '<span class="chip yellow small" title="Plug-in er ellers fravalgt">Plug-in</span>';
-  if (c.fuel === 'el') return '<span class="chip yellow small" title="Elbil er ellers fravalgt">El</span>';
-  return '';
 }
 
 /** Menneskelaesbar gearkasse-etiket for en bil. */

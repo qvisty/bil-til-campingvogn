@@ -82,7 +82,13 @@
         <div id="make-checkboxes"></div>
       </div>
     </details>
-    <select id="filter-fuel"><option value="">Alle drivmidler</option></select>
+    <details class="multiselect" id="fuel-multiselect">
+      <summary id="fuel-summary">Alle drivmidler</summary>
+      <div class="ms-panel">
+        <div class="ms-actions"><button type="button" id="fuel-all" class="small">Vælg alle</button><button type="button" id="fuel-none" class="small">Ryd</button></div>
+        <div id="fuel-checkboxes"></div>
+      </div>
+    </details>
     <details class="multiselect" id="gearbox-multiselect">
       <summary id="gearbox-summary">Alle gearkasser</summary>
       <div class="ms-panel">
@@ -110,10 +116,6 @@
     </select>
     <label><input type="checkbox" id="filter-favorites"> Kun favoritter</label>
     <label><input type="checkbox" id="filter-dismissed" checked> Skjul fravalgte</label>
-    <span class="muted small" style="margin-left:4px">Medtag:</span>
-    <label title="Diesel er ellers fravalgt"><input type="checkbox" id="include-diesel"> diesel</label>
-    <label title="Plug-in hybrid er ellers fravalgt"><input type="checkbox" id="include-phev"> plug-in</label>
-    <label title="Elbil er ellers fravalgt"><input type="checkbox" id="include-ev"> el</label>
     <button id="clear-all-cars" class="btn">Fjern alle biler</button>
   </div>
   <div id="hidebase-banner"></div>
