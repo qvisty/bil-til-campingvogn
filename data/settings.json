@@ -1,0 +1,53 @@
+{
+  "_comment": "Standardindstillinger for scoring, filtrering og driftsoekonomi. Kan aendres i brugerfladen (gemmes i localStorage) og bruges ogsaa som standard af scoring.py.",
+  "profile": {
+    "caravan_weight_kg": 1400,
+    "min_tow_kg": 1600,
+    "preferred_tow_kg": 1700,
+    "annual_km": 25000,
+    "caravan_km_per_year": 4000,
+    "ownership_years": 5,
+    "fuel_price_dkk": 14.5,
+    "expected_consumption_km_per_l": 15.0,
+    "expected_consumption_towing_km_per_l": 9.0,
+    "price_max_dkk": 250000,
+    "price_preferred_dkk": 230000,
+    "model_year_min": 2019,
+    "mileage_max_km": 125000
+  },
+  "weights": {
+    "caravan": 0.30,
+    "drivetrain": 0.20,
+    "price": 0.15,
+    "age_mileage": 0.15,
+    "safety_equipment": 0.10,
+    "running_cost": 0.10
+  },
+  "weight_ratio_thresholds": {
+    "excellent": 85,
+    "green": 90,
+    "yellow": 100
+  },
+  "mileage_bands": {
+    "great_below": 90000,
+    "acceptable_below": 110000,
+    "conditional_below": 125000
+  },
+  "priority_equipment": [
+    "adaptiv fartpilot",
+    "bakkamera",
+    "parkeringssensorer for",
+    "parkeringssensorer bag",
+    "blindvinkelassistent",
+    "vognbaneassistent",
+    "led-forlygter",
+    "apple carplay",
+    "android auto",
+    "saedevarme",
+    "anhaengertraek",
+    "13-polet",
+    "anhaengerstabilisering"
+  ],
+  "maintenance_dkk_per_year": 7000,
+  "depreciation_rate_per_year": 0.11
+}

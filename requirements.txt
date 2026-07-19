@@ -1,0 +1,9 @@
+# Python-afhaengigheder til scraper og tests.
+# Installer med:  pip install -r requirements.txt
+requests>=2.31
+beautifulsoup4>=4.12
+pytest>=7.0
+
+# Valgfrit: kun noedvendigt hvis vaesentlige data kraever JavaScript-rendering.
+# Afkommentér og koer 'playwright install chromium' hvis du faar brug for det.
+# playwright>=1.40

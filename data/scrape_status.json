@@ -1,0 +1,13 @@
+{
+  "last_run": "2026-07-19T03:33:39+00:00",
+  "source": "manuel import (erstat): kopier_section.txt",
+  "fetched": 89,
+  "active": 89,
+  "new": 89,
+  "price_changes": 0,
+  "disappeared": 0,
+  "rejected": 28,
+  "median_price": 229900,
+  "errors": [],
+  "success": true
+}

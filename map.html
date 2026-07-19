@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kort – Bil til campingvogn</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body data-page="map">
+<header class="topbar">
+  <h1><a href="index.html">🚗 Bil til campingvogn</a></h1>
+  <nav>
+    <a href="index.html" data-page="index">Forside &amp; oversigt</a>
+    <a href="map.html" data-page="map">Kort</a>
+    <a href="compare.html" data-page="compare">Sammenlign</a>
+    <a href="rejected.html" data-page="rejected">Afviste</a>
+  </nav>
+</header>
+
+<main class="container">
+  <h2>Kort <span class="muted small" id="map-count"></span></h2>
+  <p class="small muted">Bilerne er placeret efter forhandlerens by. Klik på en prik for at se bilerne der og gå til den enkelte bil. Prikkens farve følger den bedste score i byen (grøn ≥ 70, gul ≥ 50, rød derunder).</p>
+  <div id="map" class="map-box"></div>
+  <div id="map-fallback"></div>
+  <div id="map-unplaced"></div>
+</main>
+
+<footer class="site-footer">
+  Kortdata © OpenStreetMap-bidragydere. Placering er omtrentlig (efter by, ikke præcis adresse).
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJ8YOD3JmXBB0nQtq0e6J3gwbtGnw=" crossorigin=""></script>
+<script src="parse-score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

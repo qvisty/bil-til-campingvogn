@@ -1,0 +1,378 @@
+{
+  "_comment": "Redigerbar gearkasseviden. Bruges af normalizer.py til at klassificere en bils gearkasse ud fra maerke/model/motor/aargang og markedsfoeringsnavn. Match sker fra mest specifik til mindst specifik. type: torque_converter | ecvt_hybrid | wet_dct | dry_dct | cvt | amt | unknown. clutch: dry | wet | none | unknown.",
+  "_schema": {
+    "make": "Maerke, matches case-insensitivt",
+    "model": "Model eller delstreng af model, valgfri",
+    "engine": "Motorbetegnelse eller delstreng, valgfri",
+    "year_from": "Foerste aargang (inkl.), valgfri",
+    "year_to": "Sidste aargang (inkl.), valgfri",
+    "gearbox_code": "Intern gearkassekode hvis kendt",
+    "name_patterns": "Liste af regex-moenstre der matcher gearkassens markedsnavn i annoncen",
+    "type": "Normaliseret gearkassetype",
+    "clutch": "dry | wet | none | unknown",
+    "risks": "Kendte risici (vises som advarsler)",
+    "checkpoints": "Ting koeberen boer kontrollere",
+    "sources": "Kilder til vurderingen",
+    "confidence": "high | medium | low"
+  },
+  "rules": [
+    {
+      "make": "Toyota",
+      "name_patterns": ["e-?cvt", "hybrid", "hsd", "multidrive s"],
+      "type": "ecvt_hybrid",
+      "clutch": "none",
+      "risks": [],
+      "checkpoints": ["Bekraeft servicehistorik paa hybridsystem", "Kontroller hybridbatteriets sundhed"],
+      "sources": ["Toyota HSD dokumentation"],
+      "confidence": "high"
+    },
+    {
+      "make": "Toyota",
+      "name_patterns": ["multidrive", "cvt"],
+      "type": "cvt",
+      "clutch": "wet",
+      "risks": ["Traditionel CVT kan vaere foelsom ved tung anhaengertraek over tid"],
+      "checkpoints": ["Kontroller CVT-olieservice"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Lexus",
+      "name_patterns": ["e-?cvt", "hybrid"],
+      "type": "ecvt_hybrid",
+      "clutch": "none",
+      "risks": [],
+      "checkpoints": ["Kontroller hybridbatteriets sundhed"],
+      "sources": [],
+      "confidence": "high"
+    },
+    {
+      "make": "Honda",
+      "name_patterns": ["e-?cvt", "e:hev", "hybrid", "i-mmd"],
+      "type": "ecvt_hybrid",
+      "clutch": "none",
+      "risks": [],
+      "checkpoints": ["Kontroller hybridsystemets servicehistorik"],
+      "sources": [],
+      "confidence": "high"
+    },
+    {
+      "make": "Kia",
+      "name_patterns": ["hev", "hybrid", "6-?trins? automatgear", "6at", "aut\\.? 6"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice iht. serviceplan"],
+      "sources": ["Hyundai/Kia 6-trins automat med momentomformer paa fuld-hybrid"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Kia",
+      "name_patterns": ["dct", "dobbeltkobling", "7dct", "7-?trins? dobbelt"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["Toerkoblet 7DCT (D7UF/D7GF) kan give rykvis koersel ved lav fart og slid paa koblinger ved bykoersel og tung last"],
+      "checkpoints": ["Kontroller for opdateret software til gearkassen", "Sporg til koblingsslid og eventuel udskiftning", "Vaer opmaerksom ved traek af tung anhaenger"],
+      "sources": ["Hyundai/Kia 7DCT toerkoblet"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Hyundai",
+      "name_patterns": ["hev", "hybrid", "6at", "6-?trins? automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Hyundai",
+      "name_patterns": ["dct", "dobbeltkobling", "7dct"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["Toerkoblet 7DCT kan give rykvis koersel ved lav fart og oeget koblingsslid ved tung last"],
+      "checkpoints": ["Kontroller gearkasse-software", "Sporg til koblingsslid"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Volkswagen",
+      "name_patterns": ["dq250", "2[.,]0\\s*t.i.*dsg", "dsg.*2[.,]0", "6-?trins.*dsg"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Vaadkoblet DSG (DQ250) kraever korrekt olieservice; mekatronik-enhed er en kendt slitagedel"],
+      "checkpoints": ["Kontroller DSG-olieservice hver 60.000 km", "Sporg til historik paa mekatronik"],
+      "sources": ["VW DQ250 vaadkoblet DSG (typisk 2.0-motorer)"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Volkswagen",
+      "name_patterns": ["dq200", "7-?trins", "1[.,][02345]\\s*(tsi|etsi|tfsi).*dsg", "dsg.*1[.,][02345]\\s*(tsi|etsi|tfsi)"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["7-trins DQ200 er toerkoblet og mindre egnet til tung, vedvarende anhaengertraek; mekatronik og koblinger er slitagedele"],
+      "checkpoints": ["Kontroller DSG-service", "Sporg til mekatronik- og koblingshistorik", "Bekraeft tilladt traekvaegt for netop denne DSG"],
+      "sources": ["VW DQ200 toerkoblet DSG (typisk 1.0-1.5-motorer)"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Volkswagen",
+      "name_patterns": ["dsg"],
+      "type": "unknown",
+      "clutch": "unknown",
+      "risks": ["DSG uden angivet motor/kode: toer- eller vaadkoblet kan ikke afgoeres. Toerkoblet (DQ200) frarades til tung traek."],
+      "checkpoints": ["Afklar praecis DSG-kode (DQ200 toer vs. DQ250/DQ381 vaad)", "Bekraeft tilladt traekvaegt"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "Skoda",
+      "name_patterns": ["dq250", "2[.,]0\\s*t.i.*dsg", "dsg.*2[.,]0", "6-?trins.*dsg"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Vaadkoblet DSG (DQ250) kraever regelmaessig olieservice"],
+      "checkpoints": ["Kontroller DSG-olieservice"],
+      "sources": ["Skoda DQ250 vaadkoblet DSG (typisk 2.0-motorer)"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Skoda",
+      "name_patterns": ["dq200", "7-?trins", "1[.,][02345]\\s*(tsi|etsi|tfsi).*dsg", "dsg.*1[.,][02345]\\s*(tsi|etsi|tfsi)"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["7-trins DQ200 er toerkoblet; mindre egnet til vedvarende tung last"],
+      "checkpoints": ["Kontroller DSG-service", "Sporg til koblingshistorik", "Bekraeft tilladt traekvaegt"],
+      "sources": ["Skoda DQ200 toerkoblet DSG (typisk 1.0-1.5-motorer)"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Skoda",
+      "name_patterns": ["dsg"],
+      "type": "unknown",
+      "clutch": "unknown",
+      "risks": ["DSG uden angivet motor/kode: toer- eller vaadkoblet kan ikke afgoeres. Toerkoblet (DQ200) frarades til tung traek."],
+      "checkpoints": ["Afklar praecis DSG-kode", "Bekraeft tilladt traekvaegt"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "Seat",
+      "name_patterns": ["dq250", "2[.,]0\\s*t.i.*dsg", "dsg.*2[.,]0", "6-?trins.*dsg"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Vaadkoblet DSG (DQ250) kraever regelmaessig olieservice"],
+      "checkpoints": ["Kontroller DSG-olieservice"],
+      "sources": ["Seat DQ250 vaadkoblet DSG"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Seat",
+      "name_patterns": ["dq200", "7-?trins", "1[.,][02345]\\s*(tsi|etsi|tfsi).*dsg", "dsg.*1[.,][02345]\\s*(tsi|etsi|tfsi)"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["7-trins DQ200 er toerkoblet; mindre egnet til vedvarende tung last"],
+      "checkpoints": ["Kontroller DSG-service", "Bekraeft tilladt traekvaegt"],
+      "sources": ["Seat DQ200 toerkoblet DSG"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Seat",
+      "name_patterns": ["dsg", "dced"],
+      "type": "unknown",
+      "clutch": "unknown",
+      "risks": ["DSG uden angivet motor/kode: toer- eller vaadkoblet kan ikke afgoeres."],
+      "checkpoints": ["Afklar praecis DSG-kode", "Bekraeft tilladt traekvaegt"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "Audi",
+      "name_patterns": ["dq250", "dq381", "dl382", "2[.,]0\\s*tfsi.*s.tronic", "s.tronic.*2[.,]0"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Vaadkoblet S tronic kraever olieservice"],
+      "checkpoints": ["Kontroller S tronic-olieservice"],
+      "sources": ["Audi vaadkoblet S tronic (typisk 2.0-motorer)"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Audi",
+      "name_patterns": ["dq200", "1[.,][02345]\\s*tfsi.*s.tronic", "s.tronic.*1[.,][02345]\\s*tfsi", "7-?trins"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["Toerkoblet 7-trins S tronic (DQ200) er mindre egnet til tung, vedvarende traek"],
+      "checkpoints": ["Afklar praecis S tronic-kode", "Bekraeft tilladt traekvaegt"],
+      "sources": ["Audi DQ200 toerkoblet S tronic"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Audi",
+      "name_patterns": ["tiptronic", "8-?trins", "aisin"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": ["Audi Tiptronic momentomformer"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Mazda",
+      "name_patterns": ["skyactiv-drive", "automatgear", "6-?trins", "aut"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": ["Mazda Skyactiv-Drive 6-trins momentomformer"],
+      "confidence": "high"
+    },
+    {
+      "make": "Ford",
+      "name_patterns": ["powershift", "6dct450", "6dct250"],
+      "type": "dry_dct",
+      "clutch": "dry",
+      "risks": ["Ford PowerShift (toerkoblet 6DCT250) har kendte problemer med koblingsrystelser; 6DCT450 er vaadkoblet og mere robust"],
+      "checkpoints": ["Afklar praecis PowerShift-variant", "Sporg til koblings- og TCM-historik"],
+      "sources": ["Ford PowerShift"],
+      "confidence": "medium"
+    },
+    {
+      "make": "Ford",
+      "name_patterns": ["8-?trins", "8f", "selectshift", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Volvo",
+      "name_patterns": ["geartronic", "8-?trins", "aisin", "tf-80", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice (Aisin anbefaler skift)"],
+      "sources": ["Volvo Geartronic (Aisin) momentomformer"],
+      "confidence": "high"
+    },
+    {
+      "make": "Volvo",
+      "name_patterns": ["powershift", "dct"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Getrag vaadkoblet DCT; kraever olieservice"],
+      "checkpoints": ["Kontroller DCT-olieservice"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "BMW",
+      "name_patterns": ["steptronic", "zf", "8-?trins", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller ZF-gearolieservice"],
+      "sources": ["BMW Steptronic (ZF 8HP) momentomformer"],
+      "confidence": "high"
+    },
+    {
+      "make": "Mercedes-Benz",
+      "name_patterns": ["9g-?tronic", "7g-?tronic", "g-?tronic", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": ["Mercedes G-Tronic momentomformer"],
+      "confidence": "high"
+    },
+    {
+      "make": "Mercedes-Benz",
+      "name_patterns": ["7g-?dct", "8g-?dct", "dct"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["Vaadkoblet DCT; kraever olieservice"],
+      "checkpoints": ["Kontroller DCT-olieservice"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "Nissan",
+      "name_patterns": ["xtronic", "cvt"],
+      "type": "cvt",
+      "clutch": "wet",
+      "risks": ["Nissan Xtronic CVT er mindre egnet til vedvarende tung anhaengertraek"],
+      "checkpoints": ["Kontroller CVT-olieservice", "Vurder egnethed til jeres traekbehov"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Suzuki",
+      "name_patterns": ["hybrid", "shvs", "mildhybrid"],
+      "type": "unknown",
+      "clutch": "unknown",
+      "risks": ["Afklar om det er automatiseret manuel (AGS), CVT eller momentomformer for netop denne model"],
+      "checkpoints": ["Bekraeft praecis transmissionstype paa registreringsattest/prVe"],
+      "sources": [],
+      "confidence": "low"
+    },
+    {
+      "make": "Peugeot",
+      "name_patterns": ["eat8", "eat6", "aisin", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": ["PSA EAT8 (Aisin) momentomformer"],
+      "confidence": "high"
+    },
+    {
+      "make": "Citroen",
+      "name_patterns": ["eat8", "eat6", "aisin", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": [],
+      "confidence": "high"
+    },
+    {
+      "make": "Opel",
+      "name_patterns": ["eat8", "aisin", "automatgear"],
+      "type": "torque_converter",
+      "clutch": "wet",
+      "risks": [],
+      "checkpoints": ["Kontroller gearolieservice"],
+      "sources": [],
+      "confidence": "medium"
+    },
+    {
+      "make": "Renault",
+      "name_patterns": ["edc", "dct", "getrag"],
+      "type": "wet_dct",
+      "clutch": "wet",
+      "risks": ["EDC dobbeltkobling; afklar om toer- eller vaadkoblet for motorvarianten"],
+      "checkpoints": ["Afklar koblingstype", "Kontroller olieservice"],
+      "sources": [],
+      "confidence": "low"
+    }
+  ],
+  "type_labels": {
+    "torque_converter": "Momentomformer",
+    "ecvt_hybrid": "e-CVT / hybridsystem",
+    "wet_dct": "Vaadkoblet DCT",
+    "dry_dct": "Toerkoblet DCT",
+    "cvt": "Traditionel CVT",
+    "amt": "Automatiseret manuel",
+    "unknown": "Ukendt"
+  },
+  "type_towing_rating": {
+    "torque_converter": {"score": 1.0, "note": "Klassisk momentomformer er velegnet til anhaengertraek"},
+    "ecvt_hybrid": {"score": 0.9, "note": "e-CVT hybrid er robust og velegnet; bekraeft tilladt traekvaegt"},
+    "wet_dct": {"score": 0.8, "note": "Vaadkoblet DCT er acceptabel efter konkret vurdering"},
+    "cvt": {"score": 0.55, "note": "Traditionel CVT kan vaere foelsom ved vedvarende tung last"},
+    "amt": {"score": 0.45, "note": "Automatiseret manuel er mindre komfortabel ved traek"},
+    "dry_dct": {"score": 0.35, "note": "Toerkoblet DCT frarades til vedvarende tung anhaengertraek"},
+    "unknown": {"score": 0.5, "note": "Gearkassetype uafklaret - skal verificeres"}
+  }
+}

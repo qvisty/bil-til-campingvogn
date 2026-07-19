@@ -1,0 +1,13 @@
+# Cache og genererede arbejdsfiler
+cache/
+__pycache__/
+*.pyc
+
+# Raa indsatte data (stor HTML-dump; hentes lokalt via din browser)
+kopier_section.txt
+
+# Midlertidige filer
+scratch_*
+*.output
+.DS_Store
+node_modules/

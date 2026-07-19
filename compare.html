@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sammenlign biler – Bil til campingvogn</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="compare">
+<header class="topbar">
+  <h1><a href="index.html">🚗 Bil til campingvogn</a></h1>
+  <nav>
+    <a href="index.html" data-page="index">Forside &amp; oversigt</a>
+    <a href="map.html" data-page="map">Kort</a>
+    <a href="compare.html" data-page="compare">Sammenlign</a>
+    <a href="rejected.html" data-page="rejected">Afviste</a>
+  </nav>
+  <div class="spacer"></div>
+  <button id="clear-compare" class="btn">Ryd sammenligning</button>
+</header>
+
+<main class="container">
+  <h2>Sammenlign biler <span class="muted small">(op til 5)</span></h2>
+  <div id="compare-root"><p class="muted">Indlæser…</p></div>
+</main>
+
+<footer class="site-footer">
+  Tilføj biler til sammenligning fra oversigten eller den enkelte bilside.
+</footer>
+
+<script src="parse-score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

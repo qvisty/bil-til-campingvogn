@@ -1,0 +1,55 @@
+{
+  "_comment": "Viden om anhaengerstabilisering. search_terms bruges til at soege i annoncebeskrivelse/udstyr. model_defaults angiver hvor stabilisering typisk er standard for modellen, men konkret aktivering skal altid kontrolleres. Antag ALDRIG at stabilisering er aktiv blot fordi bilen har traek.",
+  "search_terms": [
+    "trailer stability assist",
+    "tsa",
+    "trailer sway assist",
+    "trailer sway control",
+    "tsc",
+    "trailer stabilisation",
+    "trailer stabilization",
+    "esp trailer stabilisation",
+    "esc med anhaenger",
+    "anhaengerstabilisering",
+    "stabilitetskontrol for anhaenger",
+    "trailer stability program",
+    "tsp"
+  ],
+  "trailer_assist_terms": [
+    "trailer assist",
+    "anhaenger assist",
+    "bakassistent for anhaenger",
+    "trailer maneuver assist"
+  ],
+  "statuses": {
+    "documented_car": "Dokumenteret paa den konkrete bil",
+    "documented_model": "Dokumenteret for modellen, konkret aktivering skal kontrolleres",
+    "requires_module": "Kraever originalt eller korrekt kodet trailermodul",
+    "seller_claim": "Naevnt af saelger, men ikke verificeret",
+    "not_found": "Ikke fundet",
+    "unknown": "Ukendt"
+  },
+  "model_defaults": [
+    {"make": "Volkswagen", "note": "ESC med anhaengerstabilisering er standard paa nyere VW; kraever korrekt kodet fabriks- eller eftermarkeds-trailermodul", "status": "documented_model"},
+    {"make": "Skoda", "note": "ESC-baseret anhaengerstabilisering standard; kraever korrekt kodet trailermodul", "status": "documented_model"},
+    {"make": "Volvo", "note": "Trailer Stability Assist typisk standard sammen med originalt traek", "status": "documented_model"},
+    {"make": "Ford", "note": "Trailer Sway Control er standard paa mange modeller", "status": "documented_model"},
+    {"make": "Kia", "note": "Trailer Stability Assist (via ESC) paa mange modeller; kraever korrekt kodet modul", "status": "documented_model"},
+    {"make": "Hyundai", "note": "Trailer Stability Assist (via ESC) paa mange modeller; kraever korrekt kodet modul", "status": "documented_model"},
+    {"make": "Toyota", "note": "Trailer Sway Control indgaar i VSC paa nyere modeller", "status": "documented_model"},
+    {"make": "BMW", "note": "Trailer Stability Control standard paa nyere modeller med traek", "status": "documented_model"},
+    {"make": "Mercedes-Benz", "note": "ESP anhaengerstabilisering standard med originalt traek", "status": "documented_model"},
+    {"make": "Mazda", "note": "Trailer Stability Assist paa nyere modeller", "status": "documented_model"},
+    {"make": "Peugeot", "note": "ESP-anhaengerstabilisering paa mange modeller; kraever korrekt kodet modul", "status": "documented_model"}
+  ],
+  "checkpoints": [
+    "Originalt eller kompatibelt trailermodul monteret",
+    "13-polet stik (eller 7-polet med adapter)",
+    "Korrekt kodning i ESC eller ABS til anhaengerdrift",
+    "Dokumentation fra forhandler eller vaerksted paa aktivering"
+  ],
+  "distinction": {
+    "stabilisation": "Anhaengerstabilisering registrerer slingren og kan bremse enkelte hjul eller reducere motorkraft for at daempe slinger.",
+    "assist": "Trailer Assist hjaelper med bakning og styring af anhaenger og er IKKE det samme som stabilisering."
+  }
+}

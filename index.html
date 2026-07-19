@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bil til campingvogn – markedsoverblik</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="index">
+<header class="topbar">
+  <h1><a href="index.html">🚗 Bil til campingvogn</a></h1>
+  <nav>
+    <a href="index.html" data-page="index">Forside &amp; oversigt</a>
+    <a href="map.html" data-page="map">Kort</a>
+    <a href="compare.html" data-page="compare">Sammenlign</a>
+    <a href="rejected.html" data-page="rejected">Afviste</a>
+  </nav>
+  <div class="spacer"></div>
+  <button id="paste-btn" class="btn primary">Indsæt tekst</button>
+  <button id="export-btn" class="btn">Eksportér data</button>
+  <label class="btn" for="import-input" style="cursor:pointer">Importér data<input id="import-input" type="file" accept="application/json" hidden></label>
+</header>
+
+<div id="paste-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>Indsæt tekst fra Bilbasen</h3>
+    <p class="small muted">Nemmest: åbn din søgning på Bilbasen, åbn konsollen (F12 → Console), indsæt samler-kommandoen herunder og tryk Enter. Kør den på hver side — den gemmer siderne undervejs og spørger til sidst, om den skal kopiere alt til udklipsholderen eller gå videre til næste side. Bagefter indsætter du her (Ctrl+V). Alternativt: marker den synlige liste og Ctrl+C.</p>
+    <div class="field">
+      <label class="small muted">Samler-kommando til konsollen (F12 → Console):</label>
+      <textarea class="note-input" id="console-cmd" readonly style="min-height:150px;font-family:monospace;font-size:0.75rem" onclick="this.select()"></textarea>
+      <button id="copy-cmd" class="small" type="button">Kopiér kommando</button>
+    </div>
+    <div class="field">
+      <textarea id="paste-text" class="note-input" style="min-height:220px" placeholder="Indsæt kopieret tekst her…"></textarea>
+    </div>
+    <div class="small muted" id="paste-status"></div>
+    <div class="modal-actions">
+      <button id="paste-clear" class="btn">Ryd importerede</button>
+      <button id="paste-cancel" class="btn">Annullér</button>
+      <button id="paste-do" class="btn primary">Analysér og tilføj</button>
+    </div>
+  </div>
+</div>
+
+<main class="container">
+  <h2>Markedsoverblik</h2>
+  <div class="stat-grid">
+    <div class="stat accent"><div class="num" id="stat-active">–</div><div class="label">Aktive biler</div></div>
+    <div class="stat good"><div class="num" id="stat-new">–</div><div class="label">Nye biler</div></div>
+    <div class="stat warn"><div class="num" id="stat-drops">–</div><div class="label">Prisfald</div></div>
+    <div class="stat bad"><div class="num" id="stat-rejected">–</div><div class="label">Afviste biler</div></div>
+    <div class="stat"><div class="num" id="stat-median">–</div><div class="label">Medianpris</div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="panel"><h3>🏆 Bedst rangerede</h3><ol class="top-list" id="top-score"></ol></div>
+    <div class="panel"><h3>💰 Bedste køb</h3><ol class="top-list" id="top-value"></ol></div>
+    <div class="panel"><h3>🚐 Bedste trækkebiler</h3><ol class="top-list" id="top-tow"></ol></div>
+  </div>
+
+  <div class="panel">
+    <h3>Opdatér bildata</h3>
+    <p class="small">Bilbasens søgeresultater er beskyttet af en bot-spærring (AWS WAF), så automatisk scraping er ikke mulig. Åbn i stedet din søgning i browseren og hent data via <strong>Indsæt tekst</strong> (øverst) — eller gem siden og kør <code>python scraper.py --import fil.txt</code>.</p>
+    <p class="small">Din søgning: <a id="search-link" href="https://www.bilbasen.dk/brugt/bil?adaptivecruisecontrol&amp;cartype=stationcar&amp;cartype=suv&amp;cartype=cuv&amp;cartype=mpv&amp;cartype=sedan&amp;cartype=hatchback&amp;fuel=1&amp;fuel=6&amp;gear=automatic&amp;mileageto=125000&amp;mintow=1600&amp;priceto=250000&amp;pricetype=Retail&amp;regfrom=2019-01&amp;sortby=price&amp;sortorder=asc" target="_blank" rel="noopener">Åbn Bilbasen-søgningen ↗</a> <span class="muted">(benzin + benzin-hybrid, automatgear, mintow 1600, ≤125.000 km, ≤250.000 kr., fra 2019)</span></p>
+    <p class="small muted">Terminal-alternativ: indsæt i <code>kopier_section.txt</code> og kør <code>python scraper.py --import kopier_section.txt</code> · genberegn score: <code>python scraper.py --score-only</code></p>
+    <div id="scrape-status"></div>
+  </div>
+
+  <h2>Biloversigt <span class="muted small" id="overview-count"></span></h2>
+  <div class="controls">
+    <input type="text" id="search" placeholder="Søg efter mærke, model eller forhandler...">
+    <div class="btn-group">
+      <button id="view-table" class="toggle-btn active">Tabel</button>
+      <button id="view-cards" class="toggle-btn">Kort</button>
+    </div>
+    <select id="filter-make"><option value="">Alle mærker</option></select>
+    <select id="filter-fuel"><option value="">Alle drivmidler</option></select>
+    <select id="filter-gearbox"><option value="">Alle gearkasser</option></select>
+    <select id="sort-select">
+      <option value="score">Sortér: Samlet score</option>
+      <option value="caravan">Campingvognsscore</option>
+      <option value="price">Pris</option>
+      <option value="mileage_km">Kilometerstand</option>
+      <option value="model_year">Modelår</option>
+      <option value="tow_capacity_kg">Trækvægt</option>
+      <option value="kerb_weight_kg">Egenvægt</option>
+      <option value="weight_ratio">Vægtforhold</option>
+      <option value="gearbox">Gearkassetype</option>
+    </select>
+    <label><input type="checkbox" id="filter-favorites"> Kun favoritter</label>
+    <label><input type="checkbox" id="filter-dismissed" checked> Skjul fravalgte</label>
+  </div>
+  <div id="overview"></div>
+</main>
+
+<footer class="site-footer">
+  Personligt beslutningsværktøj · data hentes lokalt fra <code>data/cars.json</code> · scores er vejledende.
+</footer>
+
+<script src="parse-score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

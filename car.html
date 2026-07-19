@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bildetalje – Bil til campingvogn</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body data-page="car">
+<header class="topbar">
+  <h1><a href="index.html">🚗 Bil til campingvogn</a></h1>
+  <nav>
+    <a href="index.html" data-page="index">Forside &amp; oversigt</a>
+    <a href="map.html" data-page="map">Kort</a>
+    <a href="compare.html" data-page="compare">Sammenlign</a>
+    <a href="rejected.html" data-page="rejected">Afviste</a>
+  </nav>
+  <div class="spacer"></div>
+  <a href="index.html" class="btn">← Tilbage til oversigt</a>
+</header>
+
+<main class="container">
+  <div id="car-detail"><p class="muted">Indlæser…</p></div>
+</main>
+
+<footer class="site-footer">
+  Vurderingerne er vejledende. Verificér altid vægte og udstyr på registreringsattesten og ved fremvisning.
+</footer>
+
+<script src="parse-score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
