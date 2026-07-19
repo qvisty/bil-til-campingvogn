@@ -33,6 +33,12 @@
 
     {"make": "Volvo", "model": "S60", "variant_patterns": ["t5"], "kerb_weight_kg": 1600, "tow_capacity_kg": 1800, "torque_nm": 350, "hp": 250, "drivetrain": "forhjulstraek", "body_type": "sedan", "trunk_liters": 442, "confidence": "low"},
     {"make": "Volvo", "model": "XC40", "variant_patterns": ["t4"], "kerb_weight_kg": 1680, "tow_capacity_kg": 1800, "torque_nm": 300, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 452, "confidence": "low"},
-    {"make": "Volvo", "model": "XC40", "variant_patterns": ["t3"], "kerb_weight_kg": 1610, "tow_capacity_kg": 1500, "torque_nm": 265, "hp": 163, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 452, "confidence": "low"}
+    {"make": "Volvo", "model": "XC40", "variant_patterns": ["t3"], "kerb_weight_kg": 1610, "tow_capacity_kg": 1500, "torque_nm": 265, "hp": 163, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 452, "confidence": "low"},
+
+    {"make": "Mercedes", "model": "A220", "variant_patterns": [], "kerb_weight_kg": 1480, "tow_capacity_kg": 1800, "torque_nm": 300, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "hatchback", "trunk_liters": 370, "confidence": "low"},
+    {"make": "Renault", "model": "Megane", "variant_patterns": ["1[.,]3 tce"], "kerb_weight_kg": 1370, "tow_capacity_kg": 1500, "torque_nm": 240, "hp": 140, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 521, "confidence": "low"},
+    {"make": "Seat", "model": "Leon", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1330, "tow_capacity_kg": 1500, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 620, "confidence": "low"},
+    {"make": "Skoda", "model": "Octavia", "variant_patterns": ["2[.,]0 tsi"], "kerb_weight_kg": 1450, "tow_capacity_kg": 1600, "torque_nm": 320, "hp": 190, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 640, "confidence": "low"},
+    {"make": "Skoda", "model": "Superb", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1500, "tow_capacity_kg": 1600, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 660, "confidence": "medium"}
   ]
 }
