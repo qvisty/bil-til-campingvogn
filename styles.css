@@ -54,7 +54,7 @@ a:hover { text-decoration: underline; }
 .topbar nav a.active { background: rgba(255,255,255,0.22); color: #fff; }
 .topbar .spacer { flex: 1; }
 
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.container { max-width: 1520px; margin: 0 auto; padding: 20px 24px; }
 
 h2 { font-size: 1.3rem; margin: 28px 0 12px; }
 h3 { font-size: 1.05rem; margin: 18px 0 8px; }

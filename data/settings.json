@@ -49,5 +49,14 @@
     "anhaengerstabilisering"
   ],
   "maintenance_dkk_per_year": 7000,
-  "depreciation_rate_per_year": 0.11
+  "depreciation_rate_per_year": 0.11,
+  "_financing_comment": "Anslaaet billaan (annuitet). ÅOP stiger med bilens alder. Rene skoen - ikke et konkret tilbud.",
+  "financing": {
+    "down_payment_pct": 0.20,
+    "term_months": 60,
+    "base_aop": 0.079,
+    "aop_per_year_over_age": 0.006,
+    "min_age_free_years": 1,
+    "max_aop": 0.16
+  }
 }

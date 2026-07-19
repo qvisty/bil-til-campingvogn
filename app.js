@@ -135,6 +135,27 @@ function carHasWarning(car) {
   return !!(car.risks && car.risks.length);
 }
 
+/** Anslaaet ÅOP for en bil (stiger med alderen). */
+function estimatedAOP(car) {
+  const f = Object.assign({ base_aop: 0.079, aop_per_year_over_age: 0.006, min_age_free_years: 1, max_aop: 0.16 },
+    State.settings.financing || {}, (State.user.settings && State.user.settings.financing) || {});
+  const age = car.model_year ? Math.max(0, new Date().getFullYear() - car.model_year) : 6;
+  const aop = f.base_aop + Math.max(0, age - f.min_age_free_years) * f.aop_per_year_over_age;
+  return Math.min(aop, f.max_aop);
+}
+
+/** Anslaaet maanedlig ydelse (annuitetslaan) for en bil. Rene skoen, ikke et tilbud. */
+function monthlyPayment(car) {
+  if (!car.price) return null;
+  const f = Object.assign({ down_payment_pct: 0.20, term_months: 60 },
+    State.settings.financing || {}, (State.user.settings && State.user.settings.financing) || {});
+  const principal = car.price * (1 - f.down_payment_pct);
+  const r = estimatedAOP(car) / 12;
+  const n = f.term_months;
+  const m = r > 0 ? principal * r / (1 - Math.pow(1 + r, -n)) : principal / n;
+  return Math.round(m);
+}
+
 /** Byg en laesbar bilbetegnelse. */
 function carName(car) {
   return [car.make, car.model, car.variant].filter(Boolean).join(' ').trim() || ('Annonce ' + car.id);
@@ -736,6 +757,7 @@ function currentList() {
       case 'gearbox': return c.gearbox_type_normalized || 'zzz';
       case 'caravan': return c.caravan_score;
       case 'value': return valuePerTenK(c) || 0;
+      case 'monthly': return monthlyPayment(c) || Infinity;
       default: return c.score;
     }
   };
@@ -781,6 +803,7 @@ function renderTable(list) {
       <td class="small">${esc(gearboxLabel(c))}</td>
       <td>${Math.round(c.caravan_score)}</td>
       <td title="Score pr. 10.000 kr.${carHasWarning(c) ? ' – OBS: bilen har risici (se bilen)' : ''}">${valuePerTenK(c) !== null ? valuePerTenK(c).toLocaleString('da-DK') : '–'}${carHasWarning(c) ? ' <span class="chip yellow small" style="padding:0 5px">⚠</span>' : ''}</td>
+      <td title="Anslået månedlig ydelse (annuitet, se bilen for forudsætninger)">${monthlyPayment(c) !== null ? monthlyPayment(c).toLocaleString('da-DK') + ' kr.' : '–'}</td>
       <td><button data-compare="${esc(c.id)}" class="${inCompare(c.id) ? 'toggle-btn active' : ''}" title="Til sammenligning">⇄</button></td>
     </tr>`;
   }).join('');
@@ -797,6 +820,7 @@ function renderTable(list) {
     { label: 'Gearkasse', key: 'gearbox' },
     { label: 'Camping', key: 'caravan' },
     { label: 'Værdi/10k', key: 'value' },
+    { label: 'Ydelse/md', key: 'monthly' },
     { label: '', key: null }
   ];
   const headCells = cols.map(col => {
@@ -819,7 +843,7 @@ function renderCards(list) {
       <div class="card-body">
         <div class="card-title"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a></div>
         <div class="card-sub">${esc(c.fuel_label || '')} · ${fmtNum(c.model_year)} · ${fmtNum(c.mileage_km, ' km')}</div>
-        <div class="card-sub">${fmtPrice(c.price)}${carLocation(c) ? ' · 📍 ' + esc(carLocation(c)) : ''}</div>
+        <div class="card-sub">${fmtPrice(c.price)}${monthlyPayment(c) !== null ? ' · ~' + monthlyPayment(c).toLocaleString('da-DK') + ' kr./md.' : ''}${carLocation(c) ? ' · 📍 ' + esc(carLocation(c)) : ''}</div>
         <div class="card-meta">
           ${weightChip(c)}
           <span class="chip neutral">${esc(gearboxLabel(c))}</span>
@@ -996,6 +1020,8 @@ function renderCarDetail(car, root) {
       <div class="panel">
         <h3>Driftsoekonomi (vejledende)</h3>
         ${economyBox(car)}
+        <h3>Finansiering (anslået)</h3>
+        ${financingBox(car)}
       </div>
       <div class="panel">
         <h3>Prishistorik</h3>
@@ -1179,6 +1205,27 @@ function economyBox(car) {
     <div class="small muted">Baseret paa ${fmtNum((e.assumptions || {}).annual_km)} km/aar. Grønt = fakta, blåt = beregnet, gråt = skøn.</div>`;
 }
 
+/** Byg finansierings-boks (anslaaet annuitetslaan). */
+function financingBox(car) {
+  const m = monthlyPayment(car);
+  if (m === null) return '<p class="small muted">Ingen pris - ydelse kan ikke anslaas.</p>';
+  const f = Object.assign({ down_payment_pct: 0.20, term_months: 60 },
+    State.settings.financing || {}, (State.user.settings && State.user.settings.financing) || {});
+  const aop = estimatedAOP(car);
+  const down = Math.round(car.price * f.down_payment_pct);
+  const principal = car.price - down;
+  const totalPaid = m * f.term_months + down;
+  return `<dl class="specs">
+      <dt><strong>Anslået ydelse</strong></dt><dd><strong>${fmtNum(m)} kr./md.</strong></dd>
+      <dt>Udbetaling</dt><dd>${fmtPrice(down)} (${Math.round(f.down_payment_pct * 100)}%)</dd>
+      <dt>Løbetid</dt><dd>${f.term_months} mdr.</dd>
+      <dt>Kreditbeløb</dt><dd>${fmtPrice(principal)}</dd>
+      <dt>Anslået ÅOP</dt><dd>${(aop * 100).toLocaleString('da-DK', { maximumFractionDigits: 1 })}% <span class="muted small">(stiger med bilens alder)</span></dd>
+      <dt>Samlet tilbagebetaling</dt><dd>${fmtPrice(Math.round(totalPaid))}</dd>
+    </dl>
+    <div class="warn-box small">Rent <strong>skøn</strong> ud fra pris, alder og standardsatser — <strong>ikke et lånetilbud</strong>. Faktisk ÅOP, gebyrer og krav afhænger af långiver og din kreditvurdering. Satser kan ændres i <code>data/settings.json</code>.</div>`;
+}
+
 /** Byg markedsvurderings-boks. */
 function marketBox(car) {
   const m = car.market || {};
@@ -1358,6 +1405,7 @@ function renderCompare() {
     { label: 'Anhaengerstabilisering', fn: c => esc((c.trailer_stability || {}).status_label) },
     { label: 'Forbrug', fn: c => c.wltp_consumption ? c.wltp_consumption + ' km/l' : '–', best: { extract: c => c.wltp_consumption, dir: 'max' } },
     { label: 'Periodisk afgift', fn: c => fmtPrice(c.periodic_tax), best: { extract: c => c.periodic_tax, dir: 'min' } },
+    { label: 'Anslået ydelse/md.', fn: c => { const m = monthlyPayment(c); return m !== null ? m.toLocaleString('da-DK') + ' kr.' : '–'; }, best: { extract: c => monthlyPayment(c), dir: 'min' } },
     { label: 'Samlet aarlig omkostning', fn: c => fmtPrice((c.economy || {}).annual_total), best: { extract: c => (c.economy || {}).annual_total, dir: 'min' } },
     { label: 'Udstyr (antal prioriteret)', fn: c => { const s = c.subscores && c.subscores.safety_equipment; return s ? (s.found || []).length + '/' + ((s.found || []).length + (s.missing || []).length) : '–'; }, best: { extract: c => { const s = c.subscores && c.subscores.safety_equipment; return s ? (s.found || []).length : null; }, dir: 'max' } },
     { label: 'Garanti', fn: c => esc(c.warranty || '–') },
