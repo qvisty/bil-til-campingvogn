@@ -212,8 +212,55 @@ const Pipeline = (function () {
   function field(value, source, confidence, original, conflict) {
     return { value, source, confidence, original: original ?? null, conflict: conflict ?? null };
   }
+  const SPEC_FILL_FIELDS = ['kerb_weight_kg', 'tow_capacity_kg', 'torque_nm', 'hp', 'drivetrain', 'body_type', 'trunk_liters', 'payload_kg', 'gears'];
+  const SPEC_WEIGHT_FIELDS = new Set(['kerb_weight_kg', 'tow_capacity_kg', 'train_weight_kg', 'nose_weight_kg']);
+
+  /** Find mest specifikke modelvidens-regel (spejler normalizer.find_model_spec). */
+  function findModelSpec(make, model, variant, year, knowledge) {
+    const rules = (knowledge && knowledge.rules) || [];
+    const makeN = normalizeMake(make), modelN = norm(model), varN = norm(variant).replace(/,/g, '.');
+    let best = null, bestSpec = -1;
+    for (const rule of rules) {
+      if (normalizeMake(rule.make || '') !== makeN) continue;
+      const rm = norm(rule.model || '');
+      if (rm && !modelN.includes(rm)) continue;
+      let spec = rm ? 1 : 0;
+      const patterns = rule.variant_patterns || [];
+      if (patterns.length) {
+        let ok = false;
+        for (const p of patterns) { try { if (new RegExp(p, 'i').test(varN)) { ok = true; break; } } catch (e) {} }
+        if (!ok) continue;
+        spec += 2;
+      }
+      if (year != null) {
+        if (rule.year_from && year < rule.year_from) continue;
+        if (rule.year_to && year > rule.year_to) continue;
+      }
+      if (spec > bestSpec) { bestSpec = spec; best = rule; }
+    }
+    return best;
+  }
+
+  /** Udfyld manglende felter fra modelviden (spejler normalizer.apply_model_specs). */
+  function applyModelSpecs(car, knowledge) {
+    const rule = findModelSpec(car.make || '', car.model || '', car.variant || '', car.model_year, knowledge);
+    if (!rule) return car;
+    const conf = rule.confidence || 'low';
+    const prov = car.field_provenance || (car.field_provenance = {});
+    const filled = [];
+    for (const f of SPEC_FILL_FIELDS) {
+      if (f in rule && (car[f] === null || car[f] === undefined || car[f] === '')) {
+        car[f] = rule[f]; filled.push(f);
+        if (SPEC_WEIGHT_FIELDS.has(f)) prov[f] = field(rule[f], 'modelviden', conf, null, 'Typisk modelvaerdi - verificér paa registreringsattesten');
+      }
+    }
+    if (filled.length) car.specs_filled = filled;
+    if (car.payload_kg == null && car.total_weight_kg && car.kerb_weight_kg) car.payload_kg = car.total_weight_kg - car.kerb_weight_kg;
+    return car;
+  }
+
   /** Normaliser en raa bil-dict til det berigede format (spejler normalizer.py). */
-  function normalizeCar(raw, gearboxKnowledge, trailerKnowledge) {
+  function normalizeCar(raw, gearboxKnowledge, trailerKnowledge, modelSpecs) {
     const car = Object.assign({}, raw);
     const make = raw.make || '', model = raw.model || '', variant = raw.variant || '';
     const description = raw.description || '';
@@ -261,6 +308,10 @@ const Pipeline = (function () {
     const sale = classifySale(raw.dealer || '', `${description} ${raw.sale_type || ''}`);
     car.sale_type = sale.sale_type; car.sale_type_label = sale.label;
     if (raw.city) car.city = raw.city;
+
+    // Udfyld manglende felter (egenvaegt/traekvaegt m.m.) fra modelviden.
+    applyModelSpecs(car, modelSpecs);
+    if (car.tow_capacity_kg && !car.has_tow_bar) car.has_tow_bar = true;
     return car;
   }
 
@@ -278,7 +329,8 @@ const Pipeline = (function () {
     if (fuel === 'el') reasons.push('Elbil er som udgangspunkt fravalgt');
     const gname = (car.gearbox_name || '').toLowerCase();
     if (gname.includes('manuel') && !gname.includes('automat')) reasons.push('Manuelt gear (automatgear er et krav)');
-    if (car.tow_capacity_kg != null && car.tow_capacity_kg < p.min_tow_kg) reasons.push(`Traekvaegt ${car.tow_capacity_kg} kg er under kravet paa ${p.min_tow_kg} kg`);
+    const towSource = ((car.field_provenance || {}).tow_capacity_kg || {}).source;
+    if (car.tow_capacity_kg != null && car.tow_capacity_kg < p.min_tow_kg && towSource !== 'modelviden') reasons.push(`Traekvaegt ${car.tow_capacity_kg} kg er under kravet paa ${p.min_tow_kg} kg`);
     if (car.model_year != null && car.model_year < p.model_year_min) reasons.push(`Modelaar ${car.model_year} er aeldre end ${p.model_year_min}`);
     if (car.mileage_km != null && car.mileage_km > p.mileage_max_km) reasons.push(`Kilometerstand ${car.mileage_km} km overstiger ${p.mileage_max_km} km`);
     if (car.price != null && car.price > p.price_max_dkk) reasons.push(`Pris ${car.price} kr. overstiger maksimum ${p.price_max_dkk} kr.`);
@@ -650,12 +702,12 @@ const Pipeline = (function () {
   }
 
   /** Fuld behandling: normaliser + scor en liste af raa biler (spejler score_all). */
-  function processRaw(rawList, settings, gearboxKnowledge, trailerKnowledge, existingActive, caravanWeight) {
+  function processRaw(rawList, settings, gearboxKnowledge, trailerKnowledge, existingActive, caravanWeight, modelSpecs) {
     // Deduplikér paa annonce-id (som Pythons merge_and_track) - undgaar at en
     // dublet paavirker markedsvurderingens antal og median.
     const seen = new Set();
     rawList = rawList.filter(r => { const k = String(r.id); if (seen.has(k)) return false; seen.add(k); return true; });
-    const normalized = rawList.map(r => normalizeCar(r, gearboxKnowledge, trailerKnowledge));
+    const normalized = rawList.map(r => normalizeCar(r, gearboxKnowledge, trailerKnowledge, modelSpecs));
     const pool = (existingActive || []).slice();
     normalized.forEach(c => { if (!evaluateRejections(c, settings).length) pool.push(c); });
     return normalized.map(c => {

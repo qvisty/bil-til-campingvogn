@@ -1,0 +1,38 @@
+{
+  "_comment": "Modelvidens-fil: typiske specifikationer pr. model+motor, brugt til at udfylde felter der mangler i Bilbasens liste (isaer egenvaegt/koereklar og traekvaegt). Vaerdierne er bedste bud/typiske tal og SKAL verificeres paa registreringsattesten. Gaettet traekvaegt afviser ALDRIG en bil - kun annoncens egen traekvaegt maa udloese afvisning. Tilfoej/ret gerne raekker; matches fra mest til mindst specifik (maerke -> model -> variant_patterns -> aar).",
+  "_fields": "kerb_weight_kg = koereklar vaegt (inkl. foerer/vaesker). tow_capacity_kg = bremset anhaenger. drivetrain: forhjulstraek | baghjulstraek | firehjulstraek.",
+  "rules": [
+    {"make": "Alfa Romeo", "model": "Giulia", "variant_patterns": ["2[.,]0 t"], "kerb_weight_kg": 1504, "tow_capacity_kg": 1500, "torque_nm": 330, "hp": 200, "drivetrain": "baghjulstraek", "body_type": "sedan", "trunk_liters": 480, "confidence": "low"},
+
+    {"make": "Audi", "model": "A3", "variant_patterns": ["40 tfsi"], "kerb_weight_kg": 1490, "tow_capacity_kg": 1800, "torque_nm": 320, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "sedan", "trunk_liters": 380, "confidence": "low"},
+    {"make": "Audi", "model": "Q3", "variant_patterns": ["35 tfsi"], "kerb_weight_kg": 1540, "tow_capacity_kg": 1600, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 530, "confidence": "low"},
+
+    {"make": "Mazda", "model": "CX-5", "variant_patterns": ["2[.,]5"], "kerb_weight_kg": 1600, "tow_capacity_kg": 2000, "torque_nm": 258, "hp": 194, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 550, "confidence": "medium"},
+
+    {"make": "Mercedes", "model": "A200", "variant_patterns": [], "kerb_weight_kg": 1375, "tow_capacity_kg": 1500, "torque_nm": 250, "hp": 163, "drivetrain": "forhjulstraek", "body_type": "hatchback", "trunk_liters": 370, "confidence": "low"},
+    {"make": "Mercedes", "model": "B200", "variant_patterns": [], "kerb_weight_kg": 1465, "tow_capacity_kg": 1700, "torque_nm": 250, "hp": 163, "drivetrain": "forhjulstraek", "body_type": "mpv", "trunk_liters": 455, "confidence": "low"},
+
+    {"make": "Mitsubishi", "model": "Outlander", "variant_patterns": ["2[.,]0"], "kerb_weight_kg": 1560, "tow_capacity_kg": 1600, "torque_nm": 195, "hp": 150, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 477, "confidence": "low"},
+
+    {"make": "Nissan", "model": "Qashqai", "variant_patterns": ["1[.,]3"], "kerb_weight_kg": 1465, "tow_capacity_kg": 1650, "torque_nm": 270, "hp": 158, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 504, "confidence": "low"},
+
+    {"make": "Renault", "model": "Austral", "variant_patterns": ["1[.,]3"], "kerb_weight_kg": 1430, "tow_capacity_kg": 1500, "torque_nm": 270, "hp": 158, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 500, "confidence": "low"},
+    {"make": "Renault", "model": "Grand Scenic", "variant_patterns": ["1[.,]3 tce"], "kerb_weight_kg": 1490, "tow_capacity_kg": 1650, "torque_nm": 240, "hp": 140, "drivetrain": "forhjulstraek", "body_type": "mpv", "trunk_liters": 596, "confidence": "low"},
+
+    {"make": "Seat", "model": "Ateca", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1350, "tow_capacity_kg": 1500, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 510, "confidence": "low"},
+    {"make": "Seat", "model": "Tarraco", "variant_patterns": ["2[.,]0 tsi"], "kerb_weight_kg": 1720, "tow_capacity_kg": 2200, "torque_nm": 320, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 700, "confidence": "low"},
+    {"make": "Seat", "model": "Tarraco", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1573, "tow_capacity_kg": 1800, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 700, "confidence": "low"},
+
+    {"make": "Skoda", "model": "Kodiaq", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1550, "tow_capacity_kg": 1800, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 720, "confidence": "low"},
+
+    {"make": "VW", "model": "Passat", "variant_patterns": ["2[.,]0 tsi"], "kerb_weight_kg": 1540, "tow_capacity_kg": 1800, "torque_nm": 320, "hp": 190, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 650, "confidence": "low"},
+    {"make": "VW", "model": "Passat", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1490, "tow_capacity_kg": 1600, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "stationcar", "trunk_liters": 650, "confidence": "medium"},
+    {"make": "VW", "model": "T-Roc", "variant_patterns": ["2[.,]0 tsi"], "kerb_weight_kg": 1535, "tow_capacity_kg": 1900, "torque_nm": 320, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 445, "confidence": "low"},
+    {"make": "VW", "model": "Tiguan", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1560, "tow_capacity_kg": 1800, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 615, "confidence": "medium"},
+    {"make": "VW", "model": "Touran", "variant_patterns": ["1[.,]5 tsi"], "kerb_weight_kg": 1544, "tow_capacity_kg": 1700, "torque_nm": 250, "hp": 150, "drivetrain": "forhjulstraek", "body_type": "mpv", "trunk_liters": 743, "confidence": "low"},
+
+    {"make": "Volvo", "model": "S60", "variant_patterns": ["t5"], "kerb_weight_kg": 1600, "tow_capacity_kg": 1800, "torque_nm": 350, "hp": 250, "drivetrain": "forhjulstraek", "body_type": "sedan", "trunk_liters": 442, "confidence": "low"},
+    {"make": "Volvo", "model": "XC40", "variant_patterns": ["t4"], "kerb_weight_kg": 1680, "tow_capacity_kg": 1800, "torque_nm": 300, "hp": 190, "drivetrain": "firehjulstraek", "body_type": "suv", "trunk_liters": 452, "confidence": "low"},
+    {"make": "Volvo", "model": "XC40", "variant_patterns": ["t3"], "kerb_weight_kg": 1610, "tow_capacity_kg": 1500, "torque_nm": 265, "hp": 163, "drivetrain": "forhjulstraek", "body_type": "suv", "trunk_liters": 452, "confidence": "low"}
+  ]
+}

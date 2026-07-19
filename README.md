@@ -226,7 +226,28 @@ gearkasseklassifikation, vægtforhold og scoreberegning.
 | `scrape_status.json` | Status for seneste kørsel (tidspunkt, antal, fejl). |
 | `gearbox_knowledge.json` | Redigerbar viden om gearkasser (type, tør/våd kobling, risici, kilder, confidence). |
 | `trailer_stability_knowledge.json` | Viden og søgetermer om anhængerstabilisering. |
-| `settings.json` | Profil, scoringsvægte, tærskler og satser til driftsøkonomi. |
+| `model_specs.json` | Modelviden: typiske egenvægte, trækvægte, moment m.m. pr. model+motor. Udfylder felter, der mangler i Bilbasens liste. |
+| `city_coords.json` | Bykoordinater til kortet (genereres af `geocode.py`). |
+| `settings.json` | Profil, scoringsvægte, tærskler, driftsøkonomi og finansieringssatser. |
+
+### Modelviden — udfyld manglende egenvægt/trækvægt
+
+Bilbasens resultatliste mangler ofte **egenvægt** og **trækvægt** (de står kun på
+detaljesiden). `data/model_specs.json` indeholder typiske værdier pr. model+motor,
+som begge pipelines (Python + browser) bruger til at **udfylde huller** — markeret
+som "modelviden" og altid med "verificér på registreringsattesten".
+
+Vigtigt: en **gættet** trækvægt udløser aldrig et hårdt fravalg (kun annoncens egen
+trækvægt kan det). En gættet lav trækvægt sænker blot campingvognsscoren.
+
+Hver regel matcher på mærke → model → `variant_patterns` (regex på varianten,
+fx `"1[.,]5 tsi"`) → evt. årgang, fra mest til mindst specifik. Felter: `kerb_weight_kg`
+(køreklar), `tow_capacity_kg` (bremset), `torque_nm`, `hp`, `drivetrain`,
+`body_type`, `trunk_liters`, plus `confidence`.
+
+**Sådan holder du den opdateret:** når du har en ny liste biler, så bed om at få
+tilføjet modelviden for de nye modeller — så udfyldes filen med bedste bud, og alle
+biler får beregnet vægtforhold og en fuld campingvognsscore.
 
 ## 9. Tilpasning af brugerprofil og scoringsregler
 
@@ -338,8 +359,9 @@ beskyttelser. Bliver adgang blokeret, så anvend manuel import.
 ├── styles.css          # Al styling
 ├── app.js              # Al frontend-logik
 ├── scraper.py          # Scraper + databehandling (CLI)
+├── geocode.py          # Geokoder byer til kort-pins (CLI)
 ├── scoring.py          # Filtrering, vægtforhold og scoring
-├── normalizer.py       # Normalisering af rå data + gearkasse/drivmiddel
+├── normalizer.py       # Normalisering af rå data + gearkasse/drivmiddel/modelviden
 ├── requirements.txt
 ├── data/               # JSON-data og redigerbar viden
 ├── cache/              # Cache af detaljesider (oprettes automatisk)

@@ -177,6 +177,97 @@ def load_trailer_knowledge() -> Dict[str, Any]:
     return load_json(DATA_DIR / "trailer_stability_knowledge.json")
 
 
+def load_model_specs() -> Dict[str, Any]:
+    """Indlaes modelvidens-filen med typiske specifikationer pr. model.
+
+    Returns:
+        Modelvidens-dict (rules-liste).
+    """
+    return load_json(DATA_DIR / "model_specs.json")
+
+
+# Felter der maa udfyldes fra modelviden, naar de mangler i annoncen.
+_SPEC_FILL_FIELDS = ["kerb_weight_kg", "tow_capacity_kg", "torque_nm", "hp",
+                     "drivetrain", "body_type", "trunk_liters", "payload_kg", "gears"]
+_SPEC_WEIGHT_FIELDS = {"kerb_weight_kg", "tow_capacity_kg", "train_weight_kg", "nose_weight_kg"}
+
+
+def find_model_spec(make: str, model: str, variant: str, year: Optional[int],
+                    knowledge: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Find den mest specifikke modelvidens-regel for en bil.
+
+    Args:
+        make: Maerke.
+        model: Model.
+        variant: Variant (motorbetegnelse).
+        year: Modelaar.
+        knowledge: Modelvidens-dict.
+
+    Returns:
+        Den bedst matchende regel, eller None.
+    """
+    make_n = normalize_make(make)
+    model_n = _norm(model)
+    var_n = _norm(variant).replace(",", ".")
+    best, best_spec = None, -1
+    for rule in knowledge.get("rules", []):
+        if normalize_make(rule.get("make", "")) != make_n:
+            continue
+        rm = _norm(rule.get("model", ""))
+        if rm and rm not in model_n:
+            continue
+        spec = 1 if rm else 0
+        patterns = rule.get("variant_patterns", [])
+        if patterns:
+            if not any(re.search(p, var_n) for p in patterns):
+                continue
+            spec += 2
+        yf, yt = rule.get("year_from"), rule.get("year_to")
+        if year is not None:
+            if yf and year < yf:
+                continue
+            if yt and year > yt:
+                continue
+        if spec > best_spec:
+            best_spec, best = spec, rule
+    return best
+
+
+def apply_model_specs(car: Dict[str, Any], knowledge: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Udfyld manglende felter fra modelviden (typiske vaerdier - skal verificeres).
+
+    Roerer aldrig felter, der allerede har en vaerdi fra annoncen. Udfyldte vaegte
+    faar kilden 'modelviden', saa de kan skelnes og ikke udloeser haardt fravalg.
+
+    Args:
+        car: Delvist normaliseret bil-dict.
+        knowledge: Modelviden; indlaeses hvis udeladt.
+
+    Returns:
+        Bil-dict med udfyldte felter.
+    """
+    knowledge = knowledge or load_model_specs()
+    rule = find_model_spec(car.get("make", ""), car.get("model", ""),
+                           car.get("variant", ""), car.get("model_year"), knowledge)
+    if not rule:
+        return car
+    conf = rule.get("confidence", "low")
+    prov = car.setdefault("field_provenance", {})
+    filled: List[str] = []
+    for f in _SPEC_FILL_FIELDS:
+        if f in rule and car.get(f) in (None, ""):
+            car[f] = rule[f]
+            filled.append(f)
+            if f in _SPEC_WEIGHT_FIELDS:
+                prov[f] = _field(rule[f], "modelviden", conf,
+                                 conflict="Typisk modelvaerdi - verificér paa registreringsattesten")
+    if filled:
+        car["specs_filled"] = filled
+    if car.get("payload_kg") is None and car.get("total_weight_kg") and car.get("kerb_weight_kg"):
+        car["payload_kg"] = car["total_weight_kg"] - car["kerb_weight_kg"]
+    return car
+
+
 # --------------------------------------------------------------------------- #
 # Drivmiddel / hybridtype
 # --------------------------------------------------------------------------- #
@@ -490,7 +581,8 @@ def detect_equipment(equipment: Iterable[str], description: str) -> List[str]:
 # --------------------------------------------------------------------------- #
 def normalize_car(raw: Dict[str, Any],
                   gearbox_knowledge: Optional[Dict[str, Any]] = None,
-                  trailer_knowledge: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+                  trailer_knowledge: Optional[Dict[str, Any]] = None,
+                  model_specs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Normaliser en raa bil-dict til det endelige, berigede format.
 
     Tilfoejer normaliserede felter (drivmiddel, gearkassetype, udstyr,
@@ -587,6 +679,11 @@ def normalize_car(raw: Dict[str, Any],
     car["sale_type_label"] = sale["label"]
 
     car["has_tow_bar"] = has_tow_bar
+
+    # Udfyld manglende felter (isaer egenvaegt/traekvaegt) fra modelviden.
+    apply_model_specs(car, model_specs)
+    if car.get("tow_capacity_kg") and not has_tow_bar:
+        car["has_tow_bar"] = True
 
     return car
 

@@ -204,14 +204,15 @@ async function fetchJSON(path, fallback) {
 /** Indlaes alle datafiler og brugerdata. */
 async function loadAll() {
   State.user = Store.load();
-  const [cars, status, settings, priceHistory, gbKnow, trKnow, cityCoords] = await Promise.all([
+  const [cars, status, settings, priceHistory, gbKnow, trKnow, cityCoords, modelSpecs] = await Promise.all([
     fetchJSON('data/cars.json', []),
     fetchJSON('data/scrape_status.json', {}),
     fetchJSON('data/settings.json', {}),
     fetchJSON('data/price_history.json', {}),
     fetchJSON('data/gearbox_knowledge.json', {}),
     fetchJSON('data/trailer_stability_knowledge.json', {}),
-    fetchJSON('data/city_coords.json', {})
+    fetchJSON('data/city_coords.json', {}),
+    fetchJSON('data/model_specs.json', {})
   ]);
   // "Fjern alle biler" skjuler de medfoelgende data/cars.json (kun browser-importerede
   // og favoritter vises derefter). Kan vises igen via banneret i oversigten.
@@ -222,6 +223,7 @@ async function loadAll() {
   State.gearboxKnowledge = gbKnow || {};
   State.trailerKnowledge = trKnow || {};
   State.cityCoords = cityCoords || {};
+  State.modelSpecs = modelSpecs || {};
   // Flet brugerens gemte indstillinger over profilen.
   if (State.user.settings && Object.keys(State.user.settings).length && State.settings.profile) {
     State.settings.profile = Object.assign({}, State.settings.profile, State.user.settings);
@@ -316,7 +318,7 @@ function processImportedIntoCars() {
   if (!raw.length || typeof Pipeline === 'undefined') return;
   const existingActive = State.cars.filter(c => c.status === 'active' && !c.rejected);
   const scored = Pipeline.processRaw(raw, State.settings, State.gearboxKnowledge,
-    State.trailerKnowledge, existingActive, caravanWeight());
+    State.trailerKnowledge, existingActive, caravanWeight(), State.modelSpecs);
   const byId = new Map(State.cars.map(c => [String(c.id), c]));
   scored.forEach(c => byId.set(String(c.id), c));  // importerede vinder ved id-sammenfald
   State.cars = [...byId.values()];

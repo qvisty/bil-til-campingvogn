@@ -1215,7 +1215,8 @@ def process_and_save(scraped: List[Dict[str, Any]], scrape_errors: List[str],
     tr = normalizer.load_trailer_knowledge()
     settings = scoring.load_settings()
 
-    normalized = [normalizer.normalize_car(c, gb, tr) for c in merged]
+    ms = normalizer.load_model_specs()
+    normalized = [normalizer.normalize_car(c, gb, tr, ms) for c in merged]
     scored = scoring.score_all(normalized, settings)
 
     save_json(DATA_DIR / "cars.json", scored)
@@ -1377,7 +1378,8 @@ def run_score_only() -> Dict[str, Any]:
     gb = normalizer.load_gearbox_knowledge()
     tr = normalizer.load_trailer_knowledge()
     settings = scoring.load_settings()
-    normalized = [normalizer.normalize_car(c, gb, tr) for c in existing]
+    ms = normalizer.load_model_specs()
+    normalized = [normalizer.normalize_car(c, gb, tr, ms) for c in existing]
     scored = scoring.score_all(normalized, settings)
     save_json(DATA_DIR / "cars.json", scored)
     log.info("Genberegnet score for %s biler", len(scored))

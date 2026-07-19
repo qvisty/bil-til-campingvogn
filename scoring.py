@@ -78,7 +78,9 @@ def evaluate_rejections(car: Dict[str, Any], settings: Dict[str, Any]) -> List[s
             reasons.append("Manuelt gear (automatgear er et krav)")
 
     tow = car.get("tow_capacity_kg")
-    if tow is not None and tow < p["min_tow_kg"]:
+    tow_source = car.get("field_provenance", {}).get("tow_capacity_kg", {}).get("source")
+    # Gaettet traekvaegt (modelviden) maa ikke udloese haardt fravalg - kun annoncens egen.
+    if tow is not None and tow < p["min_tow_kg"] and tow_source != "modelviden":
         reasons.append(f"Traekvaegt {tow} kg er under kravet paa {p['min_tow_kg']} kg")
 
     year = car.get("model_year")
