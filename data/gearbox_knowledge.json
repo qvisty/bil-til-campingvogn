@@ -58,7 +58,7 @@
     },
     {
       "make": "Kia",
-      "name_patterns": ["hev", "hybrid", "6-?trins? automatgear", "6at", "aut\\.? 6"],
+      "name_patterns": ["\\bhev\\b", "fuld.?hybrid", "self.?charging", "6-?trins? automatgear", "6at", "aut\\.? 6"],
       "type": "torque_converter",
       "clutch": "wet",
       "risks": [],
