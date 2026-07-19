@@ -83,7 +83,13 @@
       </div>
     </details>
     <select id="filter-fuel"><option value="">Alle drivmidler</option></select>
-    <select id="filter-gearbox"><option value="">Alle gearkasser</option></select>
+    <details class="multiselect" id="gearbox-multiselect">
+      <summary id="gearbox-summary">Alle gearkasser</summary>
+      <div class="ms-panel">
+        <div class="ms-actions"><button type="button" id="gearbox-all" class="small">Vælg alle</button><button type="button" id="gearbox-none" class="small">Ryd</button></div>
+        <div id="gearbox-checkboxes"></div>
+      </div>
+    </details>
     <select id="filter-year"><option value="">Alle årgange</option></select>
     <input type="number" id="filter-score" placeholder="Min. score" min="0" max="100" step="5" style="width:110px" title="Skjul biler med samlet score under dette">
     <input type="number" id="filter-monthly" placeholder="Maks kr./md." min="0" step="100" style="width:130px" title="Skjul biler med anslået ydelse over dette beløb">
@@ -95,6 +101,7 @@
       <option value="caravan">Campingvognsscore</option>
       <option value="price">Pris</option>
       <option value="mileage_km">Kilometerstand</option>
+      <option value="consumption">Forbrug (km/l)</option>
       <option value="model_year">Modelår</option>
       <option value="tow_capacity_kg">Trækvægt</option>
       <option value="kerb_weight_kg">Egenvægt</option>
