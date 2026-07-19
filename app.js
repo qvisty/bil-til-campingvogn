@@ -7,6 +7,10 @@
  * localStorage-lag
  * ----------------------------------------------------------------------- */
 const LS_KEY = 'biltilcamping.v1';
+const SS_KEY = 'biltilcamping.session.v1';
+// Kun disse felter gemmes VARIGT (localStorage). Alt andet (indsatte biler, noter,
+// status, sammenligning m.m.) er kun midlertidigt for den aktuelle browsersession.
+const PERSIST_KEYS = ['favorites', 'favoriteSnapshots', 'settings'];
 
 /** Standardstruktur for brugerdata i localStorage. */
 function defaultUserData() {
@@ -28,24 +32,32 @@ function defaultUserData() {
 }
 
 const Store = {
-  /** Indlaes hele brugerdata-objektet fra localStorage. */
+  /** Indlaes brugerdata: favoritter/indstillinger fra localStorage (varigt),
+   *  resten fra sessionStorage (kun denne browsersession). */
   load() {
+    const data = defaultUserData();
     try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return defaultUserData();
-      return Object.assign(defaultUserData(), JSON.parse(raw));
-    } catch (e) {
-      console.warn('Kunne ikke laese localStorage:', e);
-      return defaultUserData();
-    }
+      const ls = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      PERSIST_KEYS.forEach(k => { if (k in ls) data[k] = ls[k]; });  // ignorér gamle ikke-varige felter
+    } catch (e) { console.warn('Kunne ikke laese localStorage:', e); }
+    try {
+      const ss = JSON.parse(sessionStorage.getItem(SS_KEY) || '{}');
+      Object.keys(ss).forEach(k => { if (!PERSIST_KEYS.includes(k)) data[k] = ss[k]; });
+    } catch (e) { console.warn('Kunne ikke laese sessionStorage:', e); }
+    return data;
   },
-  /** Gem hele brugerdata-objektet. */
+  /** Gem brugerdata opdelt: varige felter i localStorage, resten i sessionStorage. */
   save(data) {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.warn('Kunne ikke gemme localStorage:', e);
-    }
+      const persist = {};
+      PERSIST_KEYS.forEach(k => { persist[k] = data[k]; });
+      localStorage.setItem(LS_KEY, JSON.stringify(persist));
+    } catch (e) { console.warn('Kunne ikke gemme localStorage:', e); }
+    try {
+      const session = {};
+      Object.keys(data).forEach(k => { if (!PERSIST_KEYS.includes(k)) session[k] = data[k]; });
+      sessionStorage.setItem(SS_KEY, JSON.stringify(session));
+    } catch (e) { console.warn('Kunne ikke gemme sessionStorage:', e); }
   },
   /** Hent aktuelle brugerdata (cachet i State). */
   get() { return State.user; },
@@ -330,9 +342,8 @@ function importPastedText(text) {
 /** Fjern ALLE biler fra oversigten: browser-importerede ryddes, og de medfoelgende
  *  (data/cars.json) skjules. Favoritter, noter og indstillinger beholdes. */
 function clearAllCars() {
-  if (!confirm('Fjern ALLE biler fra oversigten – både dem du har indsat og dem der følger med siden?\n\nDine favoritter, noter og indstillinger beholdes.')) return;
+  if (!confirm('Fjern alle indsatte biler fra oversigten?\n\nDine favoritter beholdes.')) return;
   State.user.importedRaw = {};
-  State.user.hideBaseCars = true;
   Store.commit();
   location.reload();
 }
@@ -800,7 +811,10 @@ function renderOverview() {
   const container = document.getElementById('overview');
   if (!container) return;
   if (!list.length) {
-    container.innerHTML = '<div class="empty-state">Ingen biler matcher. Justér filtre, eller koer scraperen.</div>';
+    const noData = !activeCars().length;
+    container.innerHTML = noData
+      ? '<div class="empty-state">Ingen biler endnu. Tryk <strong>Indsæt tekst</strong> øverst og indsæt dit Bilbasen-søgeresultat, så vises og scores bilerne her. Dine data gemmes kun i din browser.</div>'
+      : '<div class="empty-state">Ingen biler matcher filtrene. Tryk “Nulstil filtre”.</div>';
     return;
   }
   container.innerHTML = Overview.view === 'table' ? renderTable(list) : renderCards(list);

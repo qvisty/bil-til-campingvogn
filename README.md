@@ -312,8 +312,12 @@ Ved senere ændringer: `git add -A && git commit -m "..." && git push`.
 
 Bemærk:
 - `kopier_section.txt` (din rå HTML-dump) er i `.gitignore` og udgives ikke.
-- `data/cars.json` udgives som demodata — det er offentlige Bilbasen-annoncer.
-- Favoritter, noter og manuelle egenvægte ligger kun i din browser (aldrig i repoet).
+- `data/cars.json` udgives **tom** (`[]`) — der følger ingen biler med, så du undgår
+  forkert/forældet data. Du indsætter selv dine data via **Indsæt tekst**.
+- **Kun favoritter og indstillinger gemmes varigt** (localStorage). Indsatte biler,
+  noter, status og sammenligning er kun midlertidige for den aktuelle browsersession
+  (sessionStorage) og forsvinder, når du lukker fanen — så en ny session starter rent.
+  En favorit gemmer bilens fulde info som snapshot og bevares.
 
 ## 14. Juridiske og tekniske hensyn ved scraping
 
