@@ -1109,6 +1109,8 @@ function renderCarDetail(car, root) {
           <dt>Kugletryk</dt><dd>${provDD(car, 'nose_weight_kg', ' kg')}</dd>
         </dl>
         <div class="info-box small">Vaegtforholdet er en <strong>sikkerhedsvejledning</strong>, ikke et lovkrav. Verificér alle vaegte paa registreringsattesten.</div>
+        <h3>Slå eksakte vægte op</h3>
+        ${plateLookupBox()}
       </div>
     </div>
 
@@ -1200,6 +1202,20 @@ function renderCarDetail(car, root) {
 /** Byg favorit-knap med tekst til detaljesiden. */
 function starButtonHTML(id) {
   return `<button id="detail-fav" class="btn">${isFavorite(id) ? '★ Favorit' : '☆ Marker favorit'}</button>`;
+}
+
+/** Byg boks til at slaa bilens eksakte vaegte op i det danske Motorregister m.fl.
+ *  Kraever nummerpladen (fra annoncen eller forhandleren). */
+function plateLookupBox() {
+  return `
+    <div class="controls" style="margin:2px 0 8px">
+      <label>Nummerplade
+        <input type="text" id="plate-input" placeholder="fx AB12345" maxlength="8" style="width:120px;text-transform:uppercase">
+      </label>
+      <button id="plate-nrpla" class="btn small">Slå op (nrpla.de) ↗</button>
+      <button id="plate-motorreg" class="btn small">Motorregister ↗</button>
+    </div>
+    <div class="small muted">Indtast bilens nummerplade (står i annoncen eller fås hos forhandleren). nrpla.de viser egenvægt, totalvægt og trækvægt; Motorstyrelsens Motorregister er den officielle kilde. Tast tallene ind i "Egenvægt" ovenfor for præcis beregning.</div>`;
 }
 
 /** Byg vaegtforholds-boks med felt til manuel egenvaegt. */
@@ -1425,6 +1441,15 @@ function wireCarDetail(car) {
   document.getElementById('manual-kerb')?.addEventListener('change', e => {
     const v = Number(e.target.value) || null;
     setManualKerb(car, v);
+  });
+  const plate = () => (document.getElementById('plate-input')?.value || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  document.getElementById('plate-nrpla')?.addEventListener('click', () => {
+    const p = plate();
+    if (!p) { alert('Indtast en nummerplade først.'); return; }
+    window.open('https://nrpla.de/' + encodeURIComponent(p), '_blank', 'noopener');
+  });
+  document.getElementById('plate-motorreg')?.addEventListener('click', () => {
+    window.open('https://motorregister.skat.dk', '_blank', 'noopener');
   });
   document.getElementById('clear-kerb')?.addEventListener('click', () => setManualKerb(car, null));
   document.getElementById('user-status')?.addEventListener('change', e => setStatus(car.id, e.target.value));
