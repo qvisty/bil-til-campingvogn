@@ -17,8 +17,9 @@
   </nav>
   <div class="spacer"></div>
   <button id="paste-btn" class="btn primary">Indsæt tekst</button>
-  <button id="export-btn" class="btn">Eksportér data</button>
-  <label class="btn" for="import-input" style="cursor:pointer">Importér data<input id="import-input" type="file" accept="application/json" hidden></label>
+  <label class="btn primary" for="cars-file-input" style="cursor:pointer" title="Hent bil-data fra en fil (kopieret HTML eller tekst, fx bilerne.txt)">Hent biler fra fil<input id="cars-file-input" type="file" accept=".txt,.html,.htm" hidden></label>
+  <button id="export-btn" class="btn">Eksportér favoritter</button>
+  <label class="btn" for="import-input" style="cursor:pointer" title="Indlæs en tidligere backup af favoritter/indstillinger (JSON)">Importér favoritter<input id="import-input" type="file" accept="application/json" hidden></label>
 </header>
 
 <div id="paste-modal" class="modal-backdrop hidden">

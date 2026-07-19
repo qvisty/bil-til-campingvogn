@@ -453,9 +453,11 @@ function markActiveNav() {
   });
 }
 
-/** Eksporter alle brugerdata (favoritter, noter osv.) som JSON-fil. */
+/** Eksporter de varige brugerdata (favoritter + indstillinger) som JSON-backup. */
 function exportUserData() {
-  const blob = new Blob([JSON.stringify(State.user, null, 2)], { type: 'application/json' });
+  const out = {};
+  PERSIST_KEYS.forEach(k => { out[k] = State.user[k]; });
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -509,6 +511,19 @@ function wireImportUI() {
     if (text.trim()) importPastedText(text);
   });
   document.getElementById('paste-clear')?.addEventListener('click', clearAllCars);
+  document.getElementById('cars-file-input')?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) importCarsFromFile(file);
+    e.target.value = '';  // tillad valg af samme fil igen
+  });
+}
+
+/** Indlaes bil-data fra en valgt fil (kopieret HTML eller tekst) og importér. */
+function importCarsFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => importPastedText(reader.result || '');
+  reader.onerror = () => alert('Kunne ikke laese filen.');
+  reader.readAsText(file);
 }
 
 /** Tilknyt eksport/import-knapper hvis de findes paa siden. */

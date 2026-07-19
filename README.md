@@ -162,7 +162,8 @@ Inspicér → højreklik på `<section class="srp_results…">` → Copy → Cop
 
 **A) Indsæt direkte på siden (uden Python):**
 Klik **Indsæt tekst** øverst på forsiden, indsæt (Ctrl+V), tryk **Analysér og tilføj**.
-Bilerne parses og scores direkte i browseren og gemmes i `localStorage`.
+Eller gem dataene i en fil (fx `bilerne.txt`) og klik **Hent biler fra fil**.
+Bilerne parses og scores direkte i browseren (kun i din session).
 
 **B) Via terminal (Python):**
 Indsæt i filen `kopier_section.txt` (findes i projektmappen), gem, og kør her i

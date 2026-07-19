@@ -3,8 +3,9 @@ cache/
 __pycache__/
 *.pyc
 
-# Raa indsatte data (stor HTML-dump; hentes lokalt via din browser)
+# Raa indsatte data (store HTML-dumps; hentes lokalt via din browser)
 kopier_section.txt
+bilerne.txt
 
 # Midlertidige filer
 scratch_*
