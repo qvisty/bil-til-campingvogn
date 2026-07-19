@@ -656,11 +656,12 @@ const Overview = {
   showRejected: false,
   onlyFavorites: false,
   hideDismissed: true,
-  makeFilter: '',
+  excludedMakes: new Set(),
   fuelFilter: '',
   gearboxFilter: '',
   yearFrom: '',
-  maxMonthly: ''
+  maxMonthly: '',
+  minScore: ''
 };
 
 /** Saet oversigtens kontroller op og render foerste gang. */
@@ -671,11 +672,11 @@ function setupOverview() {
   document.getElementById('view-table')?.addEventListener('click', () => setView('table'));
   document.getElementById('view-cards')?.addEventListener('click', () => setView('cards'));
 
-  document.getElementById('filter-make')?.addEventListener('change', e => { Overview.makeFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-fuel')?.addEventListener('change', e => { Overview.fuelFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-gearbox')?.addEventListener('change', e => { Overview.gearboxFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-year')?.addEventListener('change', e => { Overview.yearFrom = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('filter-monthly')?.addEventListener('input', e => { Overview.maxMonthly = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
+  document.getElementById('filter-score')?.addEventListener('input', e => { Overview.minScore = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
   document.getElementById('filter-favorites')?.addEventListener('change', e => { Overview.onlyFavorites = e.target.checked; renderOverview(); });
   document.getElementById('filter-dismissed')?.addEventListener('change', e => { Overview.hideDismissed = e.target.checked; renderOverview(); });
@@ -706,8 +707,25 @@ function renderHideBaseBanner() {
 /** Udfyld drivmiddel- og gearkassefiltre ud fra data. */
 function populateFilterOptions() {
   const makes = [...new Set(activeCars().map(c => c.make).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'da'));
-  const makeSel = document.getElementById('filter-make');
-  if (makeSel) makes.forEach(m => makeSel.insertAdjacentHTML('beforeend', `<option value="${esc(m)}">${esc(m)}</option>`));
+  const makeBox = document.getElementById('make-checkboxes');
+  if (makeBox) {
+    makeBox.innerHTML = makes.map(m =>
+      `<label><input type="checkbox" class="make-cb" value="${esc(m)}" ${Overview.excludedMakes.has(m) ? '' : 'checked'}> ${esc(m)}</label>`).join('');
+    makeBox.querySelectorAll('.make-cb').forEach(cb => cb.addEventListener('change', () => {
+      if (cb.checked) Overview.excludedMakes.delete(cb.value); else Overview.excludedMakes.add(cb.value);
+      updateMakeSummary(makes); renderOverview();
+    }));
+    document.getElementById('make-all')?.addEventListener('click', () => {
+      Overview.excludedMakes.clear();
+      makeBox.querySelectorAll('.make-cb').forEach(cb => cb.checked = true);
+      updateMakeSummary(makes); renderOverview();
+    });
+    document.getElementById('make-none')?.addEventListener('click', () => {
+      makeBox.querySelectorAll('.make-cb').forEach(cb => { cb.checked = false; Overview.excludedMakes.add(cb.value); });
+      updateMakeSummary(makes); renderOverview();
+    });
+    updateMakeSummary(makes);
+  }
 
   const fuels = [...new Set(activeCars().map(c => c.fuel_label).filter(Boolean))];
   const fuelSel = document.getElementById('filter-fuel');
@@ -745,12 +763,26 @@ function setSort(key, { toggle = false } = {}) {
 
 /** Nulstil alle filtre og felter i oversigten. */
 function clearFilters() {
-  Object.assign(Overview, { search: '', makeFilter: '', fuelFilter: '', gearboxFilter: '', yearFrom: '', maxMonthly: '', onlyFavorites: false });
-  ['search', 'filter-make', 'filter-fuel', 'filter-gearbox', 'filter-year', 'filter-monthly'].forEach(id => {
+  Object.assign(Overview, { search: '', fuelFilter: '', gearboxFilter: '', yearFrom: '', maxMonthly: '', minScore: '', onlyFavorites: false });
+  Overview.excludedMakes.clear();
+  ['search', 'filter-fuel', 'filter-gearbox', 'filter-year', 'filter-monthly', 'filter-score'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  document.querySelectorAll('.make-cb').forEach(cb => cb.checked = true);
+  const makes = [...new Set(activeCars().map(c => c.make).filter(Boolean))];
+  updateMakeSummary(makes);
   const fav = document.getElementById('filter-favorites'); if (fav) fav.checked = false;
   renderOverview();
+}
+
+/** Opdater teksten på mærke-multiselectens knap. */
+function updateMakeSummary(allMakes) {
+  const el = document.getElementById('make-summary');
+  if (!el) return;
+  const total = (allMakes || []).length;
+  const shown = total - Overview.excludedMakes.size;
+  el.textContent = Overview.excludedMakes.size === 0 ? 'Alle mærker'
+    : shown === 0 ? 'Ingen mærker valgt' : `${shown} af ${total} mærker`;
 }
 
 /** Skift mellem tabel- og kortvisning. */
@@ -766,8 +798,9 @@ function currentList() {
   let list = activeCars();
   if (Overview.onlyFavorites) list = list.filter(c => isFavorite(c.id));
   if (Overview.hideDismissed) list = list.filter(c => !isDismissed(c.id));
-  if (Overview.makeFilter) list = list.filter(c => c.make === Overview.makeFilter);
+  if (Overview.excludedMakes.size) list = list.filter(c => !Overview.excludedMakes.has(c.make));
   if (Overview.yearFrom) list = list.filter(c => c.model_year && c.model_year >= Overview.yearFrom);
+  if (Overview.minScore) list = list.filter(c => c.score >= Overview.minScore);
   if (Overview.maxMonthly) list = list.filter(c => { const m = monthlyPayment(c); return m !== null && m <= Overview.maxMonthly; });
   if (Overview.fuelFilter) list = list.filter(c => c.fuel_label === Overview.fuelFilter);
   if (Overview.gearboxFilter) list = list.filter(c => c.gearbox_type_normalized === Overview.gearboxFilter);

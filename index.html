@@ -74,10 +74,17 @@
       <button id="view-table" class="toggle-btn active">Tabel</button>
       <button id="view-cards" class="toggle-btn">Kort</button>
     </div>
-    <select id="filter-make"><option value="">Alle mærker</option></select>
+    <details class="multiselect" id="make-multiselect">
+      <summary id="make-summary">Alle mærker</summary>
+      <div class="ms-panel">
+        <div class="ms-actions"><button type="button" id="make-all" class="small">Vælg alle</button><button type="button" id="make-none" class="small">Ryd</button></div>
+        <div id="make-checkboxes"></div>
+      </div>
+    </details>
     <select id="filter-fuel"><option value="">Alle drivmidler</option></select>
     <select id="filter-gearbox"><option value="">Alle gearkasser</option></select>
     <select id="filter-year"><option value="">Alle årgange</option></select>
+    <input type="number" id="filter-score" placeholder="Min. score" min="0" max="100" step="5" style="width:110px" title="Skjul biler med samlet score under dette">
     <input type="number" id="filter-monthly" placeholder="Maks kr./md." min="0" step="100" style="width:130px" title="Skjul biler med anslået ydelse over dette beløb">
     <button id="clear-filters" class="btn small" title="Nulstil alle filtre">Nulstil filtre</button>
     <select id="sort-select">
