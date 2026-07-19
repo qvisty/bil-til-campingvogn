@@ -647,7 +647,8 @@ const Overview = {
   hideDismissed: true,
   makeFilter: '',
   fuelFilter: '',
-  gearboxFilter: ''
+  gearboxFilter: '',
+  yearFrom: ''
 };
 
 /** Saet oversigtens kontroller op og render foerste gang. */
@@ -661,6 +662,7 @@ function setupOverview() {
   document.getElementById('filter-make')?.addEventListener('change', e => { Overview.makeFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-fuel')?.addEventListener('change', e => { Overview.fuelFilter = e.target.value; renderOverview(); });
   document.getElementById('filter-gearbox')?.addEventListener('change', e => { Overview.gearboxFilter = e.target.value; renderOverview(); });
+  document.getElementById('filter-year')?.addEventListener('change', e => { Overview.yearFrom = e.target.value ? Number(e.target.value) : ''; renderOverview(); });
   document.getElementById('filter-favorites')?.addEventListener('change', e => { Overview.onlyFavorites = e.target.checked; renderOverview(); });
   document.getElementById('filter-dismissed')?.addEventListener('change', e => { Overview.hideDismissed = e.target.checked; renderOverview(); });
   document.getElementById('sort-select')?.addEventListener('change', e => {
@@ -701,6 +703,10 @@ function populateFilterOptions() {
   const gears = [...new Set(activeCars().map(c => c.gearbox_type_normalized).filter(Boolean))];
   const gSel = document.getElementById('filter-gearbox');
   if (gSel) gears.forEach(g => gSel.insertAdjacentHTML('beforeend', `<option value="${esc(g)}">${esc(gLabels[g] || g)}</option>`));
+
+  const years = [...new Set(activeCars().map(c => c.model_year).filter(Boolean))].sort((a, b) => b - a);
+  const ySel = document.getElementById('filter-year');
+  if (ySel) years.forEach(y => ySel.insertAdjacentHTML('beforeend', `<option value="${y}">Fra ${y}</option>`));
 }
 
 /** Standard-sorteringsretning for en kolonne (1 = stigende, -1 = faldende). */
@@ -737,6 +743,7 @@ function currentList() {
   if (Overview.onlyFavorites) list = list.filter(c => isFavorite(c.id));
   if (Overview.hideDismissed) list = list.filter(c => !isDismissed(c.id));
   if (Overview.makeFilter) list = list.filter(c => c.make === Overview.makeFilter);
+  if (Overview.yearFrom) list = list.filter(c => c.model_year && c.model_year >= Overview.yearFrom);
   if (Overview.fuelFilter) list = list.filter(c => c.fuel_label === Overview.fuelFilter);
   if (Overview.gearboxFilter) list = list.filter(c => c.gearbox_type_normalized === Overview.gearboxFilter);
   if (Overview.search) {
