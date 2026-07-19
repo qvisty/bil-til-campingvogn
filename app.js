@@ -22,7 +22,8 @@ function defaultUserData() {
     settings: {},         // brugerens overrides af profil/oekonomi
     importedRaw: {},      // id -> raa bil importeret via "Indsaet tekst" i browseren
     favoriteSnapshots: {},// id -> fuldt bil-objekt gemt som reference ved favorit
-    manualWeights: {}     // id -> {kerb_weight_kg} indtastet manuelt af brugeren
+    manualWeights: {},    // id -> {kerb_weight_kg} indtastet manuelt af brugeren
+    hideBaseCars: false   // skjul medfoelgende data/cars.json (efter "Fjern alle biler")
   };
 }
 
@@ -122,6 +123,18 @@ function scoreClass(score) {
   return 's-low';
 }
 
+/** Vaerdital: score pr. 10.000 kr. (hoejere = mere egnethed for pengene).
+ *  Vises ALTID sammen med scoren og risici - aldrig som eneste maal. */
+function valuePerTenK(car) {
+  if (!car.price || !car.score) return null;
+  return Math.round(car.score / (car.price / 10000) * 10) / 10;
+}
+
+/** Har bilen registrerede risici (fx toerkoblet DCT, ukendt vaegt, hoej km)? */
+function carHasWarning(car) {
+  return !!(car.risks && car.risks.length);
+}
+
 /** Byg en laesbar bilbetegnelse. */
 function carName(car) {
   return [car.make, car.model, car.variant].filter(Boolean).join(' ').trim() || ('Annonce ' + car.id);
@@ -167,7 +180,9 @@ async function loadAll() {
     fetchJSON('data/trailer_stability_knowledge.json', {}),
     fetchJSON('data/city_coords.json', {})
   ]);
-  State.cars = Array.isArray(cars) ? cars : [];
+  // "Fjern alle biler" skjuler de medfoelgende data/cars.json (kun browser-importerede
+  // og favoritter vises derefter). Kan vises igen via banneret i oversigten.
+  State.cars = State.user.hideBaseCars ? [] : (Array.isArray(cars) ? cars : []);
   State.status = status || {};
   State.settings = settings || {};
   State.priceHistory = priceHistory || {};
@@ -291,10 +306,19 @@ function importPastedText(text) {
   location.reload();
 }
 
-/** Ryd alle browser-importerede biler. */
-function clearImportedCars() {
-  if (!confirm('Fjern alle biler importeret via "Indsæt tekst"? (Scraper-data i cars.json bevares.)')) return;
+/** Fjern ALLE biler fra oversigten: browser-importerede ryddes, og de medfoelgende
+ *  (data/cars.json) skjules. Favoritter, noter og indstillinger beholdes. */
+function clearAllCars() {
+  if (!confirm('Fjern ALLE biler fra oversigten – både dem du har indsat og dem der følger med siden?\n\nDine favoritter, noter og indstillinger beholdes.')) return;
   State.user.importedRaw = {};
+  State.user.hideBaseCars = true;
+  Store.commit();
+  location.reload();
+}
+
+/** Vis de medfoelgende data/cars.json-biler igen. */
+function showBaseCars() {
+  State.user.hideBaseCars = false;
   Store.commit();
   location.reload();
 }
@@ -450,7 +474,7 @@ function wireImportUI() {
     const text = document.getElementById('paste-text')?.value || '';
     if (text.trim()) importPastedText(text);
   });
-  document.getElementById('paste-clear')?.addEventListener('click', clearImportedCars);
+  document.getElementById('paste-clear')?.addEventListener('click', clearAllCars);
 }
 
 /** Tilknyt eksport/import-knapper hvis de findes paa siden. */
@@ -521,9 +545,13 @@ function renderDashboard() {
   const byScore = [...active].sort((a, b) => b.score - a.score);
   const byValue = [...active].filter(c => c.subscores)
     .sort((a, b) => b.subscores.price.score - a.subscores.price.score);
+  const byBestValue = [...active].filter(c => valuePerTenK(c) !== null)
+    .sort((a, b) => valuePerTenK(b) - valuePerTenK(a));
   const byTow = [...active].sort((a, b) => b.caravan_score - a.caravan_score);
 
   renderTopList('top-score', byScore.slice(0, 5), c => `Score ${Math.round(c.score)} · ${fmtPrice(c.price)}`);
+  renderTopList('top-bestvalue', byBestValue.slice(0, 5), c =>
+    `${valuePerTenK(c).toLocaleString('da-DK')} pr. 10.000 kr. · score ${Math.round(c.score)} · ${fmtPrice(c.price)}${carHasWarning(c) ? ' ⚠' : ''}`);
   renderTopList('top-value', byValue.slice(0, 5), c => {
     const m = c.market || {};
     return m.sufficient ? `${m.diff_pct > 0 ? '+' : ''}${m.diff_pct}% ift. median` : 'Prisscore ' + Math.round(c.subscores.price.score);
@@ -618,8 +646,24 @@ function setupOverview() {
     setSort(e.target.value);
   });
 
+  document.getElementById('clear-all-cars')?.addEventListener('click', clearAllCars);
+  renderHideBaseBanner();
   populateFilterOptions();
   renderOverview();
+}
+
+/** Vis en banner naar de medfoelgende biler er skjult, med mulighed for at vise dem igen. */
+function renderHideBaseBanner() {
+  const el = document.getElementById('hidebase-banner');
+  if (!el) return;
+  if (State.user.hideBaseCars) {
+    el.innerHTML = `<div class="info-box" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+      <span>De medfølgende biler er skjult. Kun dine indsatte biler og favoritter vises.</span>
+      <button id="show-base-cars" class="btn small">Vis medfølgende igen</button></div>`;
+    document.getElementById('show-base-cars')?.addEventListener('click', showBaseCars);
+  } else {
+    el.innerHTML = '';
+  }
 }
 
 /** Udfyld drivmiddel- og gearkassefiltre ud fra data. */
@@ -641,7 +685,7 @@ function populateFilterOptions() {
 /** Standard-sorteringsretning for en kolonne (1 = stigende, -1 = faldende). */
 function defaultSortDir(key) {
   // "Højere er bedre" sorteres faldende som udgangspunkt; resten stigende.
-  const descKeys = ['score', 'caravan', 'tow_capacity_kg', 'model_year', 'kerb_weight_kg'];
+  const descKeys = ['score', 'caravan', 'tow_capacity_kg', 'model_year', 'kerb_weight_kg', 'value'];
   return descKeys.includes(key) ? -1 : 1;
 }
 
@@ -691,6 +735,7 @@ function currentList() {
       case 'weight_ratio': return (computeWeightRatio(c, caravanWeight()).ratio) || 999;
       case 'gearbox': return c.gearbox_type_normalized || 'zzz';
       case 'caravan': return c.caravan_score;
+      case 'value': return valuePerTenK(c) || 0;
       default: return c.score;
     }
   };
@@ -735,6 +780,7 @@ function renderTable(list) {
       <td><span class="chip ${wr.color}">${wr.ratio === null ? '–' : wr.ratio + '%'}</span></td>
       <td class="small">${esc(gearboxLabel(c))}</td>
       <td>${Math.round(c.caravan_score)}</td>
+      <td title="Score pr. 10.000 kr.${carHasWarning(c) ? ' – OBS: bilen har risici (se bilen)' : ''}">${valuePerTenK(c) !== null ? valuePerTenK(c).toLocaleString('da-DK') : '–'}${carHasWarning(c) ? ' <span class="chip yellow small" style="padding:0 5px">⚠</span>' : ''}</td>
       <td><button data-compare="${esc(c.id)}" class="${inCompare(c.id) ? 'toggle-btn active' : ''}" title="Til sammenligning">⇄</button></td>
     </tr>`;
   }).join('');
@@ -750,6 +796,7 @@ function renderTable(list) {
     { label: 'Vaegtforhold', key: 'weight_ratio' },
     { label: 'Gearkasse', key: 'gearbox' },
     { label: 'Camping', key: 'caravan' },
+    { label: 'Værdi/10k', key: 'value' },
     { label: '', key: null }
   ];
   const headCells = cols.map(col => {
@@ -1315,6 +1362,7 @@ function renderCompare() {
     { label: 'Udstyr (antal prioriteret)', fn: c => { const s = c.subscores && c.subscores.safety_equipment; return s ? (s.found || []).length + '/' + ((s.found || []).length + (s.missing || []).length) : '–'; }, best: { extract: c => { const s = c.subscores && c.subscores.safety_equipment; return s ? (s.found || []).length : null; }, dir: 'max' } },
     { label: 'Garanti', fn: c => esc(c.warranty || '–') },
     { label: 'Samlet score', fn: c => scoreBadge(c.score), best: { extract: c => c.score, dir: 'max' } },
+    { label: 'Værdi (score pr. 10.000 kr.)', fn: c => { const v = valuePerTenK(c); return v !== null ? v.toLocaleString('da-DK') + (carHasWarning(c) ? ' ⚠' : '') : '–'; }, best: { extract: c => valuePerTenK(c), dir: 'max' } },
     { label: 'Campingegnethed', fn: c => Math.round(c.caravan_score) + '/100', best: { extract: c => c.caravan_score, dir: 'max' } },
     { label: 'Vigtigste risiko', fn: c => esc((c.risks && c.risks[0]) || 'Ingen registreret') },
     { label: 'Anbefaling', fn: c => esc(recommendation(c)) }

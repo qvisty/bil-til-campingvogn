@@ -35,7 +35,7 @@
     </div>
     <div class="small muted" id="paste-status"></div>
     <div class="modal-actions">
-      <button id="paste-clear" class="btn">Ryd importerede</button>
+      <button id="paste-clear" class="btn">Fjern alle biler</button>
       <button id="paste-cancel" class="btn">Annullér</button>
       <button id="paste-do" class="btn primary">Analysér og tilføj</button>
     </div>
@@ -54,7 +54,8 @@
 
   <div class="grid-3">
     <div class="panel"><h3>🏆 Bedst rangerede</h3><ol class="top-list" id="top-score"></ol></div>
-    <div class="panel"><h3>💰 Bedste køb</h3><ol class="top-list" id="top-value"></ol></div>
+    <div class="panel"><h3>💎 Bedste værdi</h3><div class="small muted" style="margin:-4px 0 8px">Score pr. 10.000 kr. ⚠ = har risici</div><ol class="top-list" id="top-bestvalue"></ol></div>
+    <div class="panel"><h3>💰 Bedste køb</h3><div class="small muted" style="margin:-4px 0 8px">Bedste tilbud ift. markedsprisen</div><ol class="top-list" id="top-value"></ol></div>
     <div class="panel"><h3>🚐 Bedste trækkebiler</h3><ol class="top-list" id="top-tow"></ol></div>
   </div>
 
@@ -78,6 +79,7 @@
     <select id="filter-gearbox"><option value="">Alle gearkasser</option></select>
     <select id="sort-select">
       <option value="score">Sortér: Samlet score</option>
+      <option value="value">Værdi (score pr. 10.000 kr.)</option>
       <option value="caravan">Campingvognsscore</option>
       <option value="price">Pris</option>
       <option value="mileage_km">Kilometerstand</option>
@@ -89,7 +91,9 @@
     </select>
     <label><input type="checkbox" id="filter-favorites"> Kun favoritter</label>
     <label><input type="checkbox" id="filter-dismissed" checked> Skjul fravalgte</label>
+    <button id="clear-all-cars" class="btn">Fjern alle biler</button>
   </div>
+  <div id="hidebase-banner"></div>
   <div id="overview"></div>
 </main>
 
