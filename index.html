@@ -63,7 +63,7 @@
   <div class="panel">
     <h3>Opdatér bildata</h3>
     <p class="small">Bilbasens søgeresultater er beskyttet af en bot-spærring (AWS WAF), så automatisk scraping er ikke mulig. Åbn i stedet din søgning i browseren og hent data via <strong>Indsæt tekst</strong> (øverst) — eller gem siden og kør <code>python scraper.py --import fil.txt</code>.</p>
-    <p class="small">Din søgning: <a id="search-link" href="https://www.bilbasen.dk/brugt/bil?adaptivecruisecontrol&amp;cartype=stationcar&amp;cartype=suv&amp;cartype=cuv&amp;cartype=mpv&amp;cartype=sedan&amp;cartype=hatchback&amp;fuel=1&amp;fuel=6&amp;gear=automatic&amp;mileageto=125000&amp;mintow=1600&amp;priceto=250000&amp;pricetype=Retail&amp;regfrom=2019-01&amp;sortby=price&amp;sortorder=asc" target="_blank" rel="noopener">Åbn Bilbasen-søgningen ↗</a> <span class="muted">(benzin + benzin-hybrid, automatgear, mintow 1600, ≤125.000 km, ≤250.000 kr., fra 2019)</span></p>
+    <p class="small">Din søgning: <a id="search-link" href="https://www.bilbasen.dk/brugt/bil?adaptivecruisecontrol&amp;cartype=stationcar&amp;cartype=suv&amp;cartype=cuv&amp;cartype=mpv&amp;cartype=sedan&amp;cartype=hatchback&amp;fuel=1&amp;fuel=2&amp;fuel=6&amp;fuel=8&amp;gear=automatic&amp;mileageto=125000&amp;mintow=1600&amp;priceto=250000&amp;pricetype=Retail&amp;regfrom=2019-01&amp;sortby=price&amp;sortorder=asc" target="_blank" rel="noopener">Åbn Bilbasen-søgningen ↗</a> <span class="muted">(benzin, diesel &amp; hybrid, automatgear, mintow 1600, ≤125.000 km, ≤250.000 kr., fra 2019)</span></p>
     <p class="small muted">Terminal-alternativ: indsæt i <code>kopier_section.txt</code> og kør <code>python scraper.py --import kopier_section.txt</code> · genberegn score: <code>python scraper.py --score-only</code></p>
     <div id="scrape-status"></div>
   </div>
@@ -110,6 +110,10 @@
     </select>
     <label><input type="checkbox" id="filter-favorites"> Kun favoritter</label>
     <label><input type="checkbox" id="filter-dismissed" checked> Skjul fravalgte</label>
+    <span class="muted small" style="margin-left:4px">Medtag:</span>
+    <label title="Diesel er ellers fravalgt"><input type="checkbox" id="include-diesel"> diesel</label>
+    <label title="Plug-in hybrid er ellers fravalgt"><input type="checkbox" id="include-phev"> plug-in</label>
+    <label title="Elbil er ellers fravalgt"><input type="checkbox" id="include-ev"> el</label>
     <button id="clear-all-cars" class="btn">Fjern alle biler</button>
   </div>
   <div id="hidebase-banner"></div>

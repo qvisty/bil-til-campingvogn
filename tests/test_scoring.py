@@ -59,14 +59,14 @@ def test_petrol_mild_hybrid_defaults_to_benzin():
     assert r["fuel"] == "benzin"
 
 
-def test_genuine_ev_still_rejected():
-    """En reel elbil (eksplicit felt) skal stadig afvises."""
+def test_ev_classified_but_not_hard_rejected():
+    """En elbil klassificeres korrekt, men afvises ikke haardt (blodt filter i UI)."""
     car = normalizer.normalize_car({
         "id": "ev1", "make": "VW", "model": "ID.4", "variant": "Pro Performance",
         "fuel": "El", "dealer": "Auto"})
     assert car["fuel"] == "el"
     reasons = scoring.evaluate_rejections(car, SETTINGS)
-    assert any("Elbil" in r for r in reasons)
+    assert not any("Elbil" in r for r in reasons)
 
 
 def test_classify_mild_hybrid():
@@ -145,23 +145,25 @@ def _normalize(raw):
     return normalizer.normalize_car(raw)
 
 
-def test_reject_diesel():
-    """En diesel skal afvises med en diesel-begrundelse."""
+def test_diesel_classified_but_not_hard_rejected():
+    """Diesel klassificeres korrekt, men afvises IKKE haardt (styres som blodt filter)."""
     car = _normalize({"id": "d", "make": "VW", "model": "Passat", "fuel": "Diesel",
                       "variant": "2.0 TDI", "gearbox_name": "DSG", "tow_capacity_kg": 1800,
                       "model_year": 2020, "mileage_km": 90000, "price": 180000,
                       "dealer": "VW Bilhuset"})
+    assert car["fuel"] == "diesel"
     reasons = scoring.evaluate_rejections(car, SETTINGS)
-    assert any("Diesel" in r for r in reasons)
+    assert not any("Diesel" in r for r in reasons)
 
 
-def test_reject_plugin_hybrid():
-    """En plug-in hybrid skal afvises."""
+def test_plugin_hybrid_classified_but_not_hard_rejected():
+    """Plug-in hybrid klassificeres, men afvises ikke haardt (blodt filter i UI)."""
     car = _normalize({"id": "p", "make": "Skoda", "model": "Superb", "fuel": "Plug-in Hybrid",
                       "variant": "iV opladelig", "gearbox_name": "DSG", "tow_capacity_kg": 1800,
                       "model_year": 2021, "mileage_km": 70000, "price": 240000, "dealer": "Skoda"})
+    assert car["hybrid_type"] == "PHEV"
     reasons = scoring.evaluate_rejections(car, SETTINGS)
-    assert any("Plug-in" in r for r in reasons)
+    assert not any("Plug-in" in r for r in reasons)
 
 
 def test_reject_low_tow():

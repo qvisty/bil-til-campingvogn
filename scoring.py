@@ -58,17 +58,9 @@ def evaluate_rejections(car: Dict[str, Any], settings: Dict[str, Any]) -> List[s
     p = settings["profile"]
     reasons: List[str] = []
 
-    fuel = car.get("fuel")
-    hybrid = car.get("hybrid_type")
-
-    if fuel == "diesel" and hybrid != "diesel-hybrid":
-        reasons.append("Diesel er fravalgt")
-    if hybrid == "diesel-hybrid":
-        reasons.append("Dieselhybrid er fravalgt")
-    if hybrid == "PHEV":
-        reasons.append("Plug-in-hybrid er fravalgt")
-    if fuel == "el":
-        reasons.append("Elbil er som udgangspunkt fravalgt")
+    # Drivmiddel (diesel, dieselhybrid, plug-in, el) er IKKE laengere et haardt
+    # fravalg her - det styres som et blodt til/fra-filter i brugerfladen, saa
+    # brugeren selv kan medtage dem. De oevrige krav er stadig haarde.
 
     gtype = car.get("gearbox_type_normalized")
     gname = (car.get("gearbox_name") or "").lower()

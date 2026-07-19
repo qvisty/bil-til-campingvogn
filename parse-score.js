@@ -322,11 +322,7 @@ const Pipeline = (function () {
   /** Valider en bil mod hard-krav og returner afvisningsgrunde. */
   function evaluateRejections(car, settings) {
     const p = settings.profile; const reasons = [];
-    const fuel = car.fuel, hybrid = car.hybrid_type;
-    if (fuel === 'diesel' && hybrid !== 'diesel-hybrid') reasons.push('Diesel er fravalgt');
-    if (hybrid === 'diesel-hybrid') reasons.push('Dieselhybrid er fravalgt');
-    if (hybrid === 'PHEV') reasons.push('Plug-in-hybrid er fravalgt');
-    if (fuel === 'el') reasons.push('Elbil er som udgangspunkt fravalgt');
+    // Drivmiddel styres som blodt til/fra-filter i UI, ikke haardt fravalg her.
     const gname = (car.gearbox_name || '').toLowerCase();
     if (gname.includes('manuel') && !gname.includes('automat')) reasons.push('Manuelt gear (automatgear er et krav)');
     const towSource = ((car.field_provenance || {}).tow_capacity_kg || {}).source;

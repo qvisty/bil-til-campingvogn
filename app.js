@@ -678,7 +678,10 @@ const Overview = {
   excludedGearboxes: new Set(),
   yearFrom: '',
   maxMonthly: '',
-  minScore: ''
+  minScore: '',
+  includeDiesel: false,
+  includePHEV: false,
+  includeEV: false
 };
 
 /** Saet oversigtens kontroller op og render foerste gang. */
@@ -696,6 +699,9 @@ function setupOverview() {
   document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
   document.getElementById('filter-favorites')?.addEventListener('change', e => { Overview.onlyFavorites = e.target.checked; renderOverview(); });
   document.getElementById('filter-dismissed')?.addEventListener('change', e => { Overview.hideDismissed = e.target.checked; renderOverview(); });
+  document.getElementById('include-diesel')?.addEventListener('change', e => { Overview.includeDiesel = e.target.checked; renderOverview(); });
+  document.getElementById('include-phev')?.addEventListener('change', e => { Overview.includePHEV = e.target.checked; renderOverview(); });
+  document.getElementById('include-ev')?.addEventListener('change', e => { Overview.includeEV = e.target.checked; renderOverview(); });
   document.getElementById('sort-select')?.addEventListener('change', e => {
     setSort(e.target.value);
   });
@@ -797,12 +803,13 @@ function setSort(key, { toggle = false } = {}) {
 
 /** Nulstil alle filtre og felter i oversigten. */
 function clearFilters() {
-  Object.assign(Overview, { search: '', fuelFilter: '', yearFrom: '', maxMonthly: '', minScore: '', onlyFavorites: false });
+  Object.assign(Overview, { search: '', fuelFilter: '', yearFrom: '', maxMonthly: '', minScore: '', onlyFavorites: false, includeDiesel: false, includePHEV: false, includeEV: false });
   Overview.excludedMakes.clear();
   Overview.excludedGearboxes.clear();
   ['search', 'filter-fuel', 'filter-year', 'filter-monthly', 'filter-score'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  ['include-diesel', 'include-phev', 'include-ev'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
   document.querySelectorAll('.make-cb').forEach(cb => cb.checked = true);
   document.querySelectorAll('.gearbox-cb').forEach(cb => cb.checked = true);
   const makes = [...new Set(activeCars().map(c => c.make).filter(Boolean))];
@@ -845,6 +852,10 @@ function currentList() {
   let list = activeCars();
   if (Overview.onlyFavorites) list = list.filter(c => isFavorite(c.id));
   if (Overview.hideDismissed) list = list.filter(c => !isDismissed(c.id));
+  // Drivmiddel-fravalg (blodt): skjul diesel/plug-in/el medmindre medtaget.
+  if (!Overview.includeDiesel) list = list.filter(c => c.fuel !== 'diesel');
+  if (!Overview.includePHEV) list = list.filter(c => c.hybrid_type !== 'PHEV');
+  if (!Overview.includeEV) list = list.filter(c => c.fuel !== 'el');
   if (Overview.excludedMakes.size) list = list.filter(c => !Overview.excludedMakes.has(c.make));
   if (Overview.yearFrom) list = list.filter(c => c.model_year && c.model_year >= Overview.yearFrom);
   if (Overview.minScore) list = list.filter(c => c.score >= Overview.minScore);
@@ -909,7 +920,7 @@ function renderTable(list) {
     return `<tr>
       <td>${starHTML(c.id)}</td>
       <td>${scoreBadge(c.score)}</td>
-      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
+      <td class="name-cell"><a href="car.html?id=${esc(c.id)}">${esc(carName(c))}</a>${carFuelFlag(c)}${c._snapshot ? ' <span class="chip info small">gemt favorit</span>' : ''}<div class="small muted">📍 ${esc(carLocation(c) || '–')}</div></td>
       <td>${fmtPrice(c.price)}</td>
       <td>${fmtNum(c.mileage_km, ' km')}</td>
       <td>${c.wltp_consumption ? c.wltp_consumption.toLocaleString('da-DK') + ' km/l' : '–'}</td>
@@ -981,6 +992,14 @@ function renderCards(list) {
 /** Bilens lokation (by) til visning. */
 function carLocation(c) {
   return c.city || c.dealer_address || c.dealer || '';
+}
+
+/** Markering for drivmidler der ellers er fravalgt (diesel/plug-in/el). */
+function carFuelFlag(c) {
+  if (c.fuel === 'diesel') return '<span class="chip yellow small" title="Diesel er ellers fravalgt">Diesel</span>';
+  if (c.hybrid_type === 'PHEV') return '<span class="chip yellow small" title="Plug-in er ellers fravalgt">Plug-in</span>';
+  if (c.fuel === 'el') return '<span class="chip yellow small" title="Elbil er ellers fravalgt">El</span>';
+  return '';
 }
 
 /** Menneskelaesbar gearkasse-etiket for en bil. */

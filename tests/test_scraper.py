@@ -109,13 +109,14 @@ def test_parse_embedded_next_data():
     assert mazda["url"].endswith("/brugt/bil/mazda/cx-5/20000001")
 
 
-def test_embedded_phev_is_rejected_after_scoring():
-    """En PHEV importeret via __NEXT_DATA__ skal afvises efter normalisering/scoring."""
+def test_embedded_phev_classified_after_scoring():
+    """En PHEV importeret via __NEXT_DATA__ klassificeres som PHEV (blodt filter, ej haardt fravalg)."""
     import scoring
     cars = scraper.parse_listing_page(_read("listing_nextdata.html"))
     niro = normalizer.normalize_car(next(c for c in cars if c["id"] == "20000002"))
+    assert niro["hybrid_type"] == "PHEV"
     reasons = scoring.evaluate_rejections(niro, scoring.load_settings())
-    assert any("Plug-in" in r for r in reasons)
+    assert not any("Plug-in" in r for r in reasons)
 
 
 def test_replace_drops_old_cars():
